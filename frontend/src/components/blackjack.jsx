@@ -18,23 +18,27 @@ function shuffle(array) {
   return array.sort(() => Math.random() - 0.5);
 }
 
-function calculateHandValue(hand) {
+function calculateHandValue(cards) {
   let value = 0;
-  let aces = 0;
-  hand.forEach(card => {
-    if (['J', 'Q', 'K'].includes(card.value)) {
-      value += 10;
-    } else if (card.value === 'A') {
+  let aceCount = 0;
+
+  cards.forEach(card => {
+    if (card.value === 'A') {
+      aceCount++;
       value += 11;
-      aces += 1;
+    } else if (['K', 'Q', 'J'].includes(card.value)) {
+      value += 10;
     } else {
-      value += parseInt(card.value);
+      value += parseInt(card.value, 10);
     }
   });
-  while (value > 21 && aces > 0) {
+
+  // Adjust for Aces if value is too high
+  while (value > 21 && aceCount > 0) {
     value -= 10;
-    aces -= 1;
+    aceCount--;
   }
+
   return value;
 }
 
@@ -44,21 +48,26 @@ function BlackjackGame() {
   const [dealerHand, setDealerHand] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState(null);
-  const [showDealerCards, setShowDealerCards] = useState(false); // <-- NEW
+  const [showDealerCards, setShowDealerCards] = useState(false);
+  const [isDealing, setIsDealing] = useState(false);
 
-  function dealInitialCards() {
-    const newDeck = [...deck];
-    const player = [newDeck.pop(), newDeck.pop()];
-    const dealer = [newDeck.pop(), newDeck.pop()];
-    setPlayerHand(player);
-    setDealerHand(dealer);
-    setDeck(newDeck);
-    setGameOver(false);
-    setWinner(null);
-    setShowDealerCards(false); // hide dealer's cards at start
-  }
+  const dealCards = () => {
+    setIsDealing(true);
+    setTimeout(() => {
+      const newDeck = [...deck];
+      const player = [newDeck.pop(), newDeck.pop()];
+      const dealer = [newDeck.pop(), newDeck.pop()];
+      setPlayerHand(player);
+      setDealerHand(dealer);
+      setDeck(newDeck);
+      setGameOver(false);
+      setWinner(null);
+      setShowDealerCards(false);
+      setIsDealing(false);
+    }, 2000);
+  };
 
-  function handleHit() {
+  const handleHit = () => {
     if (gameOver) return;
     const newDeck = [...deck];
     const newCard = newDeck.pop();
@@ -69,16 +78,15 @@ function BlackjackGame() {
     if (calculateHandValue(newPlayerHand) > 21) {
       setGameOver(true);
       setWinner('Dealer');
-      setShowDealerCards(true); // reveal dealer's cards
+      setShowDealerCards(true);
     }
-  }
+  };
 
-  function handleStay() {
+  const handleStay = () => {
     if (gameOver) return;
     let newDeck = [...deck];
     let newDealerHand = [...dealerHand];
 
-    // Dealer hits until 17+
     while (calculateHandValue(newDealerHand) < 17) {
       newDealerHand.push(newDeck.pop());
     }
@@ -88,7 +96,7 @@ function BlackjackGame() {
 
     setDealerHand(newDealerHand);
     setDeck(newDeck);
-    setShowDealerCards(true); // <-- reveal cards when player stays
+    setShowDealerCards(true);
 
     if (dealerValue > 21 || playerValue > dealerValue) {
       setWinner('Player');
@@ -99,56 +107,70 @@ function BlackjackGame() {
     }
 
     setGameOver(true);
-  }
+  };
+
+  const resetGame = () => {
+    setDeck(createDeck());
+    setPlayerHand([]);
+    setDealerHand([]);
+    setGameOver(false);
+    setWinner(null);
+    setShowDealerCards(false);
+    setIsDealing(false);
+  };
 
   return (
     <div style={{ textAlign: 'center' }}>
       <h1>Blackjack</h1>
-      <div>
-  <h2>Dealer's Hand</h2>
-  {dealerHand.map((card, index) => (
-    <span key={index} className="card-container">
-      <div className={`card-inner ${(index !== 0 && showDealerCards) ? 'card-flipped' : ''}`}>
-        {/* Front of the card */}
-        <div className="card-front">
-          {card.value}{card.suit}
-        </div>
-        {/* Back of the card */}
-        <div className="card-back">
-        </div>
-         {/* ✨ Shine effect ✨ */}
-  <div className="card-shine">
-  </div>
+
+      {/* Dealer's Hand */}
+      <div className="player-dealer-section">
+        <h2>Dealer's Hand</h2>
+        {dealerHand.map((card, index) => (
+          <span key={index} className="card-container">
+            <div className={`card-inner ${showDealerCards || index === 0 ? 'card-flipped' : ''}`}>
+              <div className="card-front">
+                {card.value}{card.suit}
+              </div>
+              <div className="card-back"></div>
+              <div className="card-shine"></div>
+            </div>
+          </span>
+        ))}
+        <p>
+          {showDealerCards ? `Total: ${calculateHandValue(dealerHand)}` : 'Total: ??'}
+        </p>
       </div>
-    </span>
-  ))}
-  <p>
-    {showDealerCards ? `Total: ${calculateHandValue(dealerHand)}` : 'Total: ??'}
-  </p>
-</div>
 
+      {/* Player's Hand */}
+      <div className="player-dealer-section">
+        <h2>Player's Hand</h2>
+        {playerHand.map((card, index) => (
+          <span key={index} className="card-container">
+            <div className="card-inner">
+              <div className="card-front">
+                {card.value}{card.suit}
+              </div>
+              <div className="card-back"></div>
+              <div className="card-shine"></div>
+            </div>
+          </span>
+        ))}
+        <p>Total: {calculateHandValue(playerHand)}</p>
+      </div>
 
-<div>
-  <h2>Player's Hand</h2>
-  {playerHand.map((card, index) => (
-    <span key={index}>
-      <div className="card">{card.value}{card.suit}</div>
-    </span>
-  ))}
-  <p>Total: {calculateHandValue(playerHand)}</p>
-</div>
-
+      {/* Game Controls */}
       <div style={{ margin: '20px' }}>
-        {!gameOver && (
+        {!gameOver ? (
           <>
-            <button onClick={handleHit}>Hit</button>
-            <button onClick={handleStay}>Stay</button>
+            <button onClick={handleHit} disabled={isDealing}>Hit</button>
+            <button onClick={handleStay} disabled={isDealing}>Stay</button>
+            <button onClick={dealCards} disabled={isDealing}>Deal Cards</button>
           </>
-        )}
-        {gameOver && (
+        ) : (
           <>
             <h2>{winner === 'Tie' ? "It's a Tie!" : `${winner} Wins!`}</h2>
-            <button onClick={dealInitialCards}>Play Again</button>
+            <button onClick={resetGame}>Play Again</button>
           </>
         )}
       </div>
