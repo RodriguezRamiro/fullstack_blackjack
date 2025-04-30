@@ -1,11 +1,11 @@
 // App.js
-
-import './App.css';
-import BlackjackGame from './components/blackjack';
+import React from 'react';
+import './App.css'; // Importing the main styles
+import BlackjackGame from './components/blackjack'; // Importing the Blackjack game component
 
 function App() {
   return (
-    <div className='App'>
+    <div className="App">
       <BlackjackGame />
     </div>
   );

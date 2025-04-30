@@ -1,140 +1,65 @@
-/* General Styles */
+/* General Page Styles */
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #222; /* Dark background for contrast */
-    color: white;
     margin: 0;
-    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #0b3d0b;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    flex-direction: column;
-}
+  }
 
-/* Poker Table Background */
-.App {
-    background: linear-gradient(135deg, #2d5f4f, #1d3b33);
-    background-color: #2d5f4f; /* Soft green poker table */
-    border-radius: 15px;
-    padding: 40px; /* Increased padding to create more space around content */
-    width: 80%;
-    max-width: 900px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Reduced shadow to avoid overwhelming the layout */
-    overflow: hidden; /* Prevent content from spilling out */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.game-status {
-    font-size: 1.5rem;
-    color: #fff;
-    margin-top: 20px;
-    text-align: center;
-}
-
-/* Dealer and Player Hands */
-h2 {
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-    text-align: center; /* Ensure the title is centered */
-}
-
-.deck {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    animation: moveDeck 1s ease-in-out;
-}
-
-@keyframes moveDeck {
-    0% {
-        transform: translateX(-50%) scale(0);
-    }
-    50% {
-        transform: translateX(-50%) scale(1.5);
-    }
-    100% {
-        transform: translateX(-50%) scale(1);
-    }
-}
-
-.card-container {
-    display: inline-block;
-    margin: 15px; /* Increased margin for more space around cards */
-    position: relative;
-    text-align: center; /* Center the card content inside */
-}
-
-.card-inner {
-    position: relative;
-    width: 80px;
-    height: 120px;
-    border-radius: 12px; /* Rounded edges for the cards */
-    background-color: #fff;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    transform-style: preserve-3d;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for cards */
-}
-
-.card-inner.card-flipped {
-    transform: rotateY(180deg);
-}
-
-.card-front,
-.card-back {
+/* Blackjack Table Styling */
+.blackjack-table {
+    background: radial-gradient(circle at bottom, #2d5f4f 60%, #1d3b33 100%);
     width: 100%;
-    height: 100%;
+    max-width: 1200px;
+    height: 600px;
+    border-radius: 0 0 600px 600px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    padding: 30px 20px 100px;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    border-radius: 12px;
-    font-size: 24px;
-}
-
-.card-front {
-    background-color: #fff;
-    color: #000;
-    font-weight: bold;
-}
-
-.card-back {
-    background-color: #007f3f; /* Green back for cards */
-    transform: rotateY(180deg);
-}
-
-.card-shine {
     position: absolute;
-    top: 5px;
-    left: 5px;
-    width: 90%;
-    height: 90%;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 12px;
-    animation: shine 2s infinite linear;
-}
+    overflow: hidden;
+  }
 
-/* Shine Effect Animation */
-@keyframes shine {
-    0% {
-        transform: rotate(0deg);
-        opacity: 0.3;
-    }
-    50% {
-        transform: rotate(180deg);
-        opacity: 1;
-    }
-    100% {
-        transform: rotate(360deg);
-        opacity: 0.3;
-    }
-}
+/* Headline */
+h1 {
+    color: #fff;
+    margin-bottom: 20px;
+  }
 
-/* Button Styles */
-button {
-    background-color: #005f33;
+/* Card Display Row */
+.card-row {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 10px;
+    min-height: 110px; /* Ensures enough space for cards */
+  }
+
+/* Card Image Style */
+.card-img {
+    width: 80px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5);
+  }
+
+/* Button Controls */
+.controls {
+    margin-top: auto;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    
+  }
+
+  button {
+    background-color: #007f3f;
     color: white;
     border: none;
     padding: 12px 24px;
@@ -143,92 +68,62 @@ button {
     margin: 10px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-}
+    width: 140px;
+  }
 
-button:hover {
-    background-color: #007f3f;
-}
+  button:hover {
+    background-color: #00b159;
+  }
 
-/* Game Controls */
-button:disabled {
-    background-color: #444;
-    cursor: not-allowed;
-}
 
-/* Flex Layout for Player/Dealer Hand */
-.player-dealer-section {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 40px; /* More space between the hands and the buttons */
-    flex-wrap: wrap; /* Allow cards to wrap to the next line if they overflow */
-}
+/* Avatar Ring */
+.avatar-ring {
+    position: absolute;
+    top: -100px; /* Position it above the table */
+    left: 50%;
+    width: 100%;
+    height: 100px; /* Adjust as needed */
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 2; /* Keeps it above other content */
+  }
 
-/* Styling for Total */
-p {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-top: 15px;
-    text-align: center; /* Center the total text */
-}
+  /* Dealer Avatar */
+  .dealer-avatar {
+    width: 60px;
+    height: 60px;
+    background-color: #ddd;
+    border-radius: 12px;
+    border: 3px solid white;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+    margin-bottom: 10px;
+  }
 
-/* Spacing for the Game Controls */
-.game-controls {
-    margin-top: 30px;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px; /* Added gap between the buttons */
-}
 
-/* Aligning Buttons */
-button {
-    width: 120px; /* Fixed width for buttons to make them aligned */
-}
+/* Avatar Placeholder Styling */
+.avatar-placeholder {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: #ccc; /* Light grey for the placeholder */
+    border-radius: 8px; /* Rounded edges */
+    border: 2px solid #fff;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+    transform-origin: bottom center; /* Rotate around the bottom center */
+    z-index: 3; /* Ensures placeholders are above the avatar ring */
+  }
 
-@keyframes dealCard {
-    0% {
-        transform: scale(0);
-        opacity: 0;
-    }
-    50% {
-        transform: scale(1);
-        opacity: 0.5;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
+  /* Adjusted Avatar Placeholder Positions */
+  .avatar-0 { left: -15%; top: 10%; transform: rotate(250deg);}
+  .avatar-1 { left: 6%; top: 10%; transform: rotate(210deg);}
+  .avatar-2 { left: 40%; top: 10%; transform: rotate(180deg);}
+  .avatar-3 { left: 73%; top: 10%; transform: rotate(150deg);}
+  .avatar-4 { left: 98%; top: 10%; transform: rotate(30deg);}
 
-.card-inner {
-    animation: dealCard 0.5s ease-out;
-}
 
-@media (max-width: 600px) {
-    .card-inner {
-        width: 60px;
-        height: 90px;
-    }
-
-    .game-controls {
-        flex-direction: column;
-    }
-
-    .player-dealer-section {
-        flex-direction: column;
-    }
-}
-
-.reset-button {
-    background-color: #e60000;
-    color: white;
-    padding: 12px 24px;
-    font-size: 1rem;
-    border-radius: 8px;
-    margin: 10px;
-    cursor: pointer;
-}
-
-.reset-button:hover {
-    background-color: #ff0000;
-}
+/* Additional Fix for Avatar Placement */
+.player-area {
+    /* Add relative positioning to ensure avatars are placed correctly */
+    position: relative;
+    z-index: 2;
+  }
