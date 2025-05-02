@@ -1,4 +1,6 @@
 // blackjack.jsx
+
+
 import React, { useEffect, useState } from 'react';
 import DealerHand from './dealerhand';
 import PlayerHand from './playerhand';
@@ -12,16 +14,28 @@ export default function BlackjackGame() {
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
   const [gameOver, setGameOver] = useState(false);
+  const [playerTurn, setPlayerTurn] = useState(false); // new state
 
+  // Fetch deck on mount
   useEffect(() => {
-    fetch(`${API_BASE}/new/shuffle/?deck_count=1`)
-      .then(res => res.json())
-      .then(data => setDeckId(data.deck_id));
+    fetchNewDeck();
   }, []);
+
+  const fetchNewDeck = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/new/shuffle/?deck_count=1`);
+      const data = await res.json();
+      console.log('Fetched deck:', data);
+      setDeckId(data.deck_id);
+    } catch (err) {
+      console.error('Failed to fetch new deck:', err);
+    }
+  };
 
   const calculateHandValue = (cards) => {
     let value = 0;
     let aceCount = 0;
+
     cards.forEach(card => {
       if (['KING', 'QUEEN', 'JACK'].includes(card.value)) {
         value += 10;
@@ -35,7 +49,7 @@ export default function BlackjackGame() {
 
     while (value > 21 && aceCount > 0) {
       value -= 10;
-      aceCount -= 1;
+      aceCount--;
     }
 
     return value;
@@ -43,29 +57,42 @@ export default function BlackjackGame() {
 
   const dealCards = async () => {
     if (!deckId) return;
-    const draw = await fetch(`${API_BASE}/${deckId}/draw/?count=4`);
-    const data = await draw.json();
-    setPlayerCards([data.cards[0], data.cards[2]]);
-    setDealerCards([data.cards[1], data.cards[3]]);
-    setGameOver(false);
+    try {
+      const res = await fetch(`${API_BASE}/${deckId}/draw/?count=4`);
+      const data = await res.json();
+      console.log('Dealt cards:', data);
+      if (data.success) {
+        setPlayerCards([data.cards[0], data.cards[2]]);
+        setDealerCards([data.cards[1], data.cards[3]]);
+        setGameOver(false);
+        setPlayerTurn(true);
+      } else {
+        console.error('Card draw failed:', data);
+      }
+    } catch (err) {
+      console.error('Deal error:', err);
+    }
   };
 
   const hitCard = async () => {
-    if (!deckId || gameOver) return;
+    if (!deckId || !playerTurn) return;
 
-    const draw = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
-    const data = await draw.json();
-    const newHand = [...playerCards, data.cards[0]];
-    setPlayerCards(newHand);
+    const res = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
+    const data = await res.json();
+    const updatedHand = [...playerCards, data.cards[0]];
+    setPlayerCards(updatedHand);
 
-    if (calculateHandValue(newHand) > 21) {
+    const total = calculateHandValue(updatedHand);
+    if (total > 21) {
       setGameOver(true);
+      setPlayerTurn(false);
     }
   };
 
   const stay = async () => {
-    if (!deckId || gameOver) return;
+    if (!deckId || !playerTurn) return;
 
+    setPlayerTurn(false);
     let dealerHand = [...dealerCards];
     let dealerTotal = calculateHandValue(dealerHand);
 
@@ -81,40 +108,46 @@ export default function BlackjackGame() {
   };
 
   const resetGame = async () => {
-    const shuffleResponse = await fetch(`${API_BASE}/new/shuffle/?deck_count=1`);
-    const shuffleData = await shuffleResponse.json();
-    setDeckId(shuffleData.deck_id);
+    await fetchNewDeck();
     setPlayerCards([]);
     setDealerCards([]);
     setGameOver(false);
+    setPlayerTurn(false);
+  };
+
+  const renderResult = () => {
+    const playerValue = calculateHandValue(playerCards);
+    const dealerValue = calculateHandValue(dealerCards);
+
+    if (playerValue > 21) return 'You busted! Game over!';
+    if (dealerValue > 21) return 'Dealer busted! You win!';
+    if (playerValue > dealerValue) return 'You win!';
+    if (playerValue === dealerValue) return "It's a tie!";
+    return 'Dealer wins!';
   };
 
   return (
-    <div className="blackjack-table">
-      <h1>Blackjack</h1>
-      <DealerHand cards={dealerCards} />
-      <PlayerHand cards={playerCards} />
-      <Controls
-  onDeal={dealCards}
-  onHit={hitCard}
-  onStay={stay}
-  onReset={resetGame}
-  disabled={playerCards.length === 0 || gameOver}
-  gameOver={gameOver}
-/>
-      {gameOver && (
-        <div className="game-over-message">
-          {calculateHandValue(playerCards) > 21
-            ? 'You busted! Game over!'
-            : calculateHandValue(dealerCards) > 21
-            ? 'Dealer busted! You win!'
-            : calculateHandValue(playerCards) > calculateHandValue(dealerCards)
-            ? 'You win!'
-            : calculateHandValue(playerCards) === calculateHandValue(dealerCards)
-            ? 'It\'s a tie!'
-            : 'Dealer wins!'}
-        </div>
-      )}
+    <div className="game-wrapper">
+      <div className="blackjack-table">
+        <h1>Blackjack</h1>
+        <DealerHand cards={dealerCards} />
+        <PlayerHand cards={playerCards} />
+        <Controls
+          onDeal={dealCards}
+          onHit={hitCard}
+          onStay={stay}
+          onReset={resetGame}
+          disabled={!playerTurn}
+          gameOver={gameOver}
+        />
+        {gameOver && <div className="game-over-message">{renderResult()}</div>}
+      </div>
+
+      <div className="avatar-ring">
+        {[...Array(5)].map((_, idx) => (
+          <div key={idx} className={`avatar-placeholder avatar-${idx}`} />
+        ))}
+      </div>
     </div>
   );
-}
+        }

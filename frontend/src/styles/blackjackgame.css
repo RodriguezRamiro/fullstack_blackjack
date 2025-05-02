@@ -1,13 +1,13 @@
 /* General Page Styles */
 body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: #0b3d0b;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #0b3d0b;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
 /* Blackjack Table Styling */
 .blackjack-table {
@@ -15,13 +15,13 @@ body {
     width: 100%;
     max-width: 1200px;
     height: 600px;
-    border-radius: 0 0 600px 600px;
+    border-radius: 0 0 200px 200px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     padding: 30px 20px 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: absolute;
+    position: relative;
     overflow: hidden;
   }
 
@@ -55,7 +55,7 @@ h1 {
     gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
-    
+
   }
 
   button {
@@ -76,18 +76,6 @@ h1 {
   }
 
 
-/* Avatar Ring */
-.avatar-ring {
-    position: absolute;
-    top: -100px; /* Position it above the table */
-    left: 50%;
-    width: 100%;
-    height: 100px; /* Adjust as needed */
-    transform: translateX(-50%);
-    pointer-events: none;
-    z-index: 2; /* Keeps it above other content */
-  }
-
   /* Dealer Avatar */
   .dealer-avatar {
     width: 60px;
@@ -98,6 +86,25 @@ h1 {
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
     margin-bottom: 10px;
   }
+
+  .game-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+/* Avatar Ring */
+.avatar-ring {
+  margin-top: 20px;
+  position: relative; /* No absolute positioning */
+  width: 100%;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  z-index: 1;
+}
 
 
 /* Avatar Placeholder Styling */
@@ -111,10 +118,11 @@ h1 {
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     transform-origin: bottom center; /* Rotate around the bottom center */
     z-index: 3; /* Ensures placeholders are above the avatar ring */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
   }
 
   /* Adjusted Avatar Placeholder Positions */
-  .avatar-0 { left: -15%; top: 10%; transform: rotate(250deg);}
+  .avatar-0 { left: -100%; top: 10%; transform: rotate(250deg);}
   .avatar-1 { left: 6%; top: 10%; transform: rotate(210deg);}
   .avatar-2 { left: 40%; top: 10%; transform: rotate(180deg);}
   .avatar-3 { left: 73%; top: 10%; transform: rotate(150deg);}
@@ -125,5 +133,5 @@ h1 {
 .player-area {
     /* Add relative positioning to ensure avatars are placed correctly */
     position: relative;
-    z-index: 2;
+    z-index:auto;
   }

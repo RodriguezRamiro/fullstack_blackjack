@@ -1,13 +1,12 @@
-// App.js
 import React from 'react';
-import './App.css'; // Importing the main styles
-import BlackjackGame from './components/blackjack'; // Importing the Blackjack game component
+import './App.css';
+import BlackjackGame from './components/blackjack';
 
 function App() {
   return (
-    <div className="App">
+    <main className="app-container">
       <BlackjackGame />
-    </div>
+    </main>
   );
 }
 

@@ -1,14 +1,13 @@
-// DealerHand.jsx
 import React from 'react';
 
-export default function DealerHand({ cards = [] }) {
-  // Function to calculate the total hand value
+export default function DealerHand({ cards = [], reveal = true }) {
+  // Helper to calculate the hand's total value
   const calculateHandValue = (cards) => {
     let value = 0;
     let aceCount = 0;
 
     cards.forEach(card => {
-      if (card.value === 'KING' || card.value === 'QUEEN' || card.value === 'JACK') {
+      if (['KING', 'QUEEN', 'JACK'].includes(card.value)) {
         value += 10;
       } else if (card.value === 'ACE') {
         value += 11;
@@ -18,31 +17,43 @@ export default function DealerHand({ cards = [] }) {
       }
     });
 
-    // Adjust for aces if the value exceeds 21
     while (value > 21 && aceCount > 0) {
       value -= 10;
-      aceCount -= 1;
+      aceCount--;
     }
 
     return value;
   };
 
+  // Optionally hide the first dealer card
+  const displayCards = reveal
+    ? cards
+    : cards.map((card, idx) =>
+        idx === 0
+          ? { image: '/card-back.png', code: 'Hidden' } // placeholder back image
+          : card
+      );
+
   return (
     <div className="dealer-area">
-      {/* Conditional rendering of the avatar */}
       <div className="dealer-avatar" />
       <h2>Dealer's Hand</h2>
       <div className="card-row">
-        {Array.isArray(cards) && cards.length > 0 ? (
-          cards.map((card, idx) => (
-            <img key={idx} src={card.image} alt={card.code} className="card-img" />
+        {displayCards.length > 0 ? (
+          displayCards.map((card, idx) => (
+            <img
+              key={idx}
+              src={card.image}
+              alt={card.code === 'Hidden' ? 'Hidden card' : card.code}
+              className="card-img"
+            />
           ))
         ) : (
-          <p>No cards dealt yet</p>  // Fallback text if no cards are available
+          <p>No cards dealt yet</p>
         )}
       </div>
-      {/* Display the total value of the dealer's hand */}
-      {cards.length > 0 && (
+
+      {reveal && cards.length > 0 && (
         <div className="hand-value">
           <p>Total Value: {calculateHandValue(cards)}</p>
         </div>
