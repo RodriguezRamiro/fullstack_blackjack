@@ -1,11 +1,11 @@
 // blackjack.jsx
 
-
 import React, { useEffect, useState } from 'react';
 import DealerHand from './dealerhand';
 import PlayerHand from './playerhand';
 import Controls from './controls';
 import '../styles/blackjackgame.css';
+import Chatbox from './chatbox';
 
 const API_BASE = 'https://deckofcardsapi.com/api/deck';
 
@@ -14,9 +14,8 @@ export default function BlackjackGame() {
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
   const [gameOver, setGameOver] = useState(false);
-  const [playerTurn, setPlayerTurn] = useState(false); // new state
+  const [playerTurn, setPlayerTurn] = useState(false);
 
-  // Fetch deck on mount
   useEffect(() => {
     fetchNewDeck();
   }, []);
@@ -25,8 +24,11 @@ export default function BlackjackGame() {
     try {
       const res = await fetch(`${API_BASE}/new/shuffle/?deck_count=1`);
       const data = await res.json();
-      console.log('Fetched deck:', data);
-      setDeckId(data.deck_id);
+      if (data.success) {
+        setDeckId(data.deck_id);
+      } else {
+        console.error('Deck fetch failed:', data);
+      }
     } catch (err) {
       console.error('Failed to fetch new deck:', err);
     }
@@ -60,15 +62,14 @@ export default function BlackjackGame() {
     try {
       const res = await fetch(`${API_BASE}/${deckId}/draw/?count=4`);
       const data = await res.json();
-      console.log('Dealt cards:', data);
-      if (data.success) {
-        setPlayerCards([data.cards[0], data.cards[2]]);
-        setDealerCards([data.cards[1], data.cards[3]]);
-        setGameOver(false);
-        setPlayerTurn(true);
-      } else {
+      if (!data.success || !data.cards || data.cards.length < 4) {
         console.error('Card draw failed:', data);
+        return;
       }
+      setPlayerCards([data.cards[0], data.cards[2]]);
+      setDealerCards([data.cards[1], data.cards[3]]);
+      setGameOver(false);
+      setPlayerTurn(true);
     } catch (err) {
       console.error('Deal error:', err);
     }
@@ -77,15 +78,23 @@ export default function BlackjackGame() {
   const hitCard = async () => {
     if (!deckId || !playerTurn) return;
 
-    const res = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
-    const data = await res.json();
-    const updatedHand = [...playerCards, data.cards[0]];
-    setPlayerCards(updatedHand);
+    try {
+      const res = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
+      const data = await res.json();
+      if (!data.success || !data.cards || data.cards.length === 0) {
+        console.error('Failed to draw card:', data);
+        return;
+      }
+      const updatedHand = [...playerCards, data.cards[0]];
+      setPlayerCards(updatedHand);
 
-    const total = calculateHandValue(updatedHand);
-    if (total > 21) {
-      setGameOver(true);
-      setPlayerTurn(false);
+      const total = calculateHandValue(updatedHand);
+      if (total > 21) {
+        setGameOver(true);
+        setPlayerTurn(false);
+      }
+    } catch (err) {
+      console.error('Hit error:', err);
     }
   };
 
@@ -97,10 +106,19 @@ export default function BlackjackGame() {
     let dealerTotal = calculateHandValue(dealerHand);
 
     while (dealerTotal < 17) {
-      const res = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
-      const data = await res.json();
-      dealerHand.push(data.cards[0]);
-      dealerTotal = calculateHandValue(dealerHand);
+      try {
+        const res = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
+        const data = await res.json();
+        if (!data.success || !data.cards || data.cards.length === 0) {
+          console.error('Dealer draw failed:', data);
+          break;
+        }
+        dealerHand.push(data.cards[0]);
+        dealerTotal = calculateHandValue(dealerHand);
+      } catch (err) {
+        console.error('Dealer draw error:', err);
+        break;
+      }
     }
 
     setDealerCards(dealerHand);
@@ -128,26 +146,48 @@ export default function BlackjackGame() {
 
   return (
     <div className="game-wrapper">
-      <div className="blackjack-table">
-        <h1>Blackjack</h1>
-        <DealerHand cards={dealerCards} />
-        <PlayerHand cards={playerCards} />
-        <Controls
-          onDeal={dealCards}
-          onHit={hitCard}
-          onStay={stay}
-          onReset={resetGame}
-          disabled={!playerTurn}
-          gameOver={gameOver}
-        />
-        {gameOver && <div className="game-over-message">{renderResult()}</div>}
-      </div>
+    <div className="blackjack-table">
+      <h1>Blackjack</h1>
+      <DealerHand cards={dealerCards} />
+      <p className="hand-value">
+        Dealer total: {gameOver ? calculateHandValue(dealerCards) : '??'}
+      </p>
 
-      <div className="avatar-ring">
-        {[...Array(5)].map((_, idx) => (
-          <div key={idx} className={`avatar-placeholder avatar-${idx}`} />
-        ))}
-      </div>
+      <PlayerHand cards={playerCards} />
+      <p className="hand-value">
+        Player total: {calculateHandValue(playerCards)}
+      </p>
+
+      <Controls
+        onDeal={dealCards}
+        onHit={hitCard}
+        onStay={stay}
+        onReset={resetGame}
+        disabled={!playerTurn}
+        gameOver={gameOver}
+        canDeal={!playerTurn && deckId}
+      />
+
+      {gameOver && (
+        <div className="game-over-message">
+          <strong>{renderResult()}</strong>
+        </div>
+      )}
     </div>
-  );
-        }
+
+    <div className="avatar-ring">
+  {[...Array(5)].map((_, idx) => (
+    <div key={idx} className="avatar-avatar">
+      <img
+        src="https://img.icons8.com/external-icongeek26-outline-gradient-icongeek26/64/external-user-casino-icongeek26-outline-gradient-icongeek26.png"
+        alt={`Player ${idx + 1}`}
+      />
+      <span className="avatar-label">Player {idx + 1}</span>
+    </div>
+  ))}
+  <Chatbox />
+
+</div>
+  </div>
+);
+}

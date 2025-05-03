@@ -7,131 +7,272 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  flex-direction: column;
 }
 
 /* Blackjack Table Styling */
 .blackjack-table {
-    background: radial-gradient(circle at bottom, #2d5f4f 60%, #1d3b33 100%);
-    width: 100%;
-    max-width: 1200px;
-    height: 600px;
-    border-radius: 0 0 200px 200px;
-    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-    padding: 30px 20px 100px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
-  }
+  background: radial-gradient(circle at bottom, #2d5f4f 60%, #1d3b33 100%);
+  width: 100%;
+  max-width: 1200px;
+  height: 800px;
+  border-radius: 0 0 200px 200px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  padding: 30px 20px 100px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
 
-/* Headline */
 h1 {
-    color: #fff;
-    margin-bottom: 20px;
-  }
+  color: black;
+  margin: 0;
+  text-align: left;
+  position: fixed;
+  z-index: 10;
+  transition: color 0.9s ease;
+  background: linear-gradient(135deg, #ebeb1c, #ff4b2b, #0dcd10);
+  background-size: 300% 300%;
+  animation: gradient-rotate 9s linear infinite;
+  border: transparent;
+  border-radius: 50%;
+}
 
-/* Card Display Row */
-.card-row {
-    display: flex;
-    gap: 15px;
-    justify-content: center;
-    margin-top: 10px;
-    min-height: 110px; /* Ensures enough space for cards */
-  }
+/* Chatbox Styling */
+.chatbox-container {
+  width: 30%; /* Takes up 30% of the screen width */
+  height: 100vh; /* Full height */
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #00b159;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
 
-/* Card Image Style */
-.card-img {
-    width: 80px;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5);
-  }
+}
 
-/* Button Controls */
+/* Chat Messages */
+.chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  color: white;
+  font-size: 0.9rem;
+}
+
+/* Chat Input Form */
+.chat-input-form {
+  display: flex;
+  border-top: 1px solid #00b159;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+  background: #1a1a1a;
+  color: white;
+}
+
+.chat-send-btn {
+  background-color: #00b159;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+/* Controls Section */
 .controls {
-    margin-top: auto;
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
+  margin-top: 30px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
-  }
+/* Buttons */
+button {
+  background-color: #007f3f;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1rem;
+  border-radius: 8px;
+  margin: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  width: 140px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
 
-  button {
-    background-color: #007f3f;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    font-size: 1rem;
-    border-radius: 8px;
-    margin: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    width: 140px;
-  }
+button:hover {
+  background-color: #00b159;
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.3);
+}
 
-  button:hover {
-    background-color: #00b159;
-  }
+button:disabled {
+  background-color: #b8d8b8;
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
+/* Controls Section */
+.controls {
+  margin-top: 30px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
-  /* Dealer Avatar */
-  .dealer-avatar {
-    width: 60px;
-    height: 60px;
-    background-color: #ddd;
-    border-radius: 12px;
-    border: 3px solid white;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
-    margin-bottom: 10px;
-  }
+/* Card Row */
+.card-row {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 10px;
+  min-height: 110px;
+}
 
-  .game-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-  }
+/* Card Images */
+.card-img {
+  width: 80px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Dealer & Player Areas */
+.dealer-area,
+.player-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dealer-area h2,
+.player-area h2 {
+  color: white;
+  margin-top: 1px;
+}
+
+/* Game Over Message */
+.game-over-message {
+  margin-top: 20px;
+  font-size: 1.5rem;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
 
 /* Avatar Ring */
 .avatar-ring {
-  margin-top: 20px;
-  position: relative; /* No absolute positioning */
-  width: 100%;
-  height: 80px;
   display: flex;
   justify-content: center;
-  gap: 30px;
-  z-index: 1;
+  gap: 100px;
+  position: absolute;
+  bottom: 100px;
+  width: 42%;
 }
 
+/* Avatar Box */
+.avatar-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-/* Avatar Placeholder Styling */
+/* Avatar Images */
+.avatar-avatar img {
+  border-radius: 62px;
+  padding: 3px;
+  background: linear-gradient(135deg, #ebeb1c, #ff4b2b, #0dcd10);
+  background-size: 300% 300%;
+  animation: gradient-rotate 9s linear infinite;
+  border: 3px solid transparent;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+}
+
+.avatar-label {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #fff;
+}
+
+/* Dealer and Player Avatars */
+.dealer-avatar,
+.player-avatar,
 .avatar-placeholder {
-    position: absolute;
-    width: 50px;
-    height: 50px;
-    background-color: #ccc; /* Light grey for the placeholder */
-    border-radius: 8px; /* Rounded edges */
-    border: 2px solid #fff;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-    transform-origin: bottom center; /* Rotate around the bottom center */
-    z-index: 3; /* Ensures placeholders are above the avatar ring */
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+  width: 80px;
+  height: 80px;
+  background-color: black;
+  border-radius: 50%;
+  border: 3px solid rgb(14, 11, 11);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  transform-origin: bottom center;
+  z-index: 3;
+}
+
+/* Optional: avatar spinning gradient animation */
+@keyframes gradient-rotate {
+  0% {
+    background-position: 0% 50%;
   }
-
-  /* Adjusted Avatar Placeholder Positions */
-  .avatar-0 { left: -100%; top: 10%; transform: rotate(250deg);}
-  .avatar-1 { left: 6%; top: 10%; transform: rotate(210deg);}
-  .avatar-2 { left: 40%; top: 10%; transform: rotate(180deg);}
-  .avatar-3 { left: 73%; top: 10%; transform: rotate(150deg);}
-  .avatar-4 { left: 98%; top: 10%; transform: rotate(30deg);}
-
-
-/* Additional Fix for Avatar Placement */
-.player-area {
-    /* Add relative positioning to ensure avatars are placed correctly */
-    position: relative;
-    z-index:auto;
+  50% {
+    background-position: 100% 50%;
   }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Chatbox styles */
+.chatbox-container {
+  position: absolute;
+  bottom: 900%;
+  right: 0px;
+  width: 400px;
+  max-height: 900px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #00b159;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 100;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.chat-input-form {
+  display: flex;
+  border-top: 1px solid #00b159;
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+  background: #1a1a1a;
+  color: white;
+}
+
+.chat-send-btn {
+  background-color: #00b159;
+  color: white;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}

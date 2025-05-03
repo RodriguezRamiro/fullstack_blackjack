@@ -1,7 +1,9 @@
+// dealerhand.jsx
+
 import React from 'react';
+import dealerImage from '../assets/icons8-croupier-96 (2).png';
 
 export default function DealerHand({ cards = [], reveal = true }) {
-  // Helper to calculate the hand's total value
   const calculateHandValue = (cards) => {
     let value = 0;
     let aceCount = 0;
@@ -13,7 +15,7 @@ export default function DealerHand({ cards = [], reveal = true }) {
         value += 11;
         aceCount += 1;
       } else {
-        value += parseInt(card.value);
+        value += parseInt(card.value, 10);
       }
     });
 
@@ -25,26 +27,34 @@ export default function DealerHand({ cards = [], reveal = true }) {
     return value;
   };
 
-  // Optionally hide the first dealer card
   const displayCards = reveal
     ? cards
     : cards.map((card, idx) =>
         idx === 0
-          ? { image: '/card-back.png', code: 'Hidden' } // placeholder back image
+          ? {
+              image: '/card-back.png',
+              code: 'Hidden',
+              value: 'Hidden',
+            }
           : card
       );
 
   return (
     <div className="dealer-area">
-      <div className="dealer-avatar" />
+      <img
+  src={dealerImage}
+  alt="Dealer Avatar"
+  className="dealer-avatar"
+/>
       <h2>Dealer's Hand</h2>
+
       <div className="card-row">
         {displayCards.length > 0 ? (
           displayCards.map((card, idx) => (
             <img
-              key={idx}
+              key={card.code !== 'Hidden' ? card.code : `hidden-${idx}`}
               src={card.image}
-              alt={card.code === 'Hidden' ? 'Hidden card' : card.code}
+              alt={card.code === 'Hidden' ? 'Facedown card' : `Card ${card.code}`}
               className="card-img"
             />
           ))

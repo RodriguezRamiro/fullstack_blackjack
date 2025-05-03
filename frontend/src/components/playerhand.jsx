@@ -1,4 +1,7 @@
+//playerhan.jsx
+
 import React from 'react';
+import playerImage from '../assets/icons8-croupier-64 (1).png';
 
 export default function PlayerHand({ cards = [] }) {
   const calculateHandValue = (cards) => {
@@ -26,6 +29,14 @@ export default function PlayerHand({ cards = [] }) {
 
   return (
     <div className="player-area">
+      {/* Player Avatar */}
+      <div className="player-avatar">
+      <img
+  src={playerImage}
+  alt="Player Avatar"
+  className="player-avatar"
+        />
+      </div>
       <h2>Player's Hand</h2>
 
       <div className="card-row">
@@ -48,16 +59,6 @@ export default function PlayerHand({ cards = [] }) {
           <p>Total Value: {calculateHandValue(cards)}</p>
         </div>
       )}
-
-      <div className="avatar-ring">
-        {[...Array(5)].map((_, idx) => (
-          <div
-            key={idx}
-            className={`avatar-placeholder avatar-${idx}`}
-            aria-label={`Avatar position ${idx + 1}`}
-          />
-        ))}
-      </div>
     </div>
   );
 }

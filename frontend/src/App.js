@@ -4,9 +4,11 @@ import BlackjackGame from './components/blackjack';
 
 function App() {
   return (
-    <main className="app-container">
-      <BlackjackGame />
-    </main>
+    <>
+      <main className="app-container">
+        <BlackjackGame />
+      </main>
+    </>
   );
 }
 
