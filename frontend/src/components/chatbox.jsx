@@ -16,7 +16,8 @@ const Chatbox = () => {
     }
 
     return (
-      <div className="chatbox-container">
+      <div className="chatbox-container" id="chatbox">
+        <div className="chatbox-header">Chat</div>
         <div className="chat-messages">
           {/* Use messages.map to render the messages */}
           {messages.map((msg, idx) => (

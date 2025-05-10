@@ -185,7 +185,6 @@ export default function BlackjackGame() {
       <span className="avatar-label">Player {idx + 1}</span>
     </div>
   ))}
-  <Chatbox />
 
 </div>
   </div>

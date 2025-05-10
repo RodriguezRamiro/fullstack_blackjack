@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import Chatbox from './components/chatbox';
 import BlackjackGame from './components/blackjack';
 
 function App() {
@@ -7,6 +8,7 @@ function App() {
     <>
       <main className="app-container">
         <BlackjackGame />
+        <Chatbox />
       </main>
     </>
   );
