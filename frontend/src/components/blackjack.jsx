@@ -1,192 +1,142 @@
 // blackjack.jsx
 
+
 import React, { useEffect, useState } from 'react';
+import socket from '../socket'; // assuming you saved it as shown
 import DealerHand from './dealerhand';
 import PlayerHand from './playerhand';
 import Controls from './controls';
 import '../styles/blackjackgame.css';
 import Chatbox from './chatbox';
 
-const API_BASE = 'https://deckofcardsapi.com/api/deck';
-
 export default function BlackjackGame() {
-  const [deckId, setDeckId] = useState(null);
+  const [roomId, setRoomId] = useState(null);
+  const [playerId, setPlayerId] = useState(null);
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
-  const [gameOver, setGameOver] = useState(false);
   const [playerTurn, setPlayerTurn] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
 
   useEffect(() => {
-    fetchNewDeck();
-  }, []);
-
-  const fetchNewDeck = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/new/shuffle/?deck_count=1`);
-      const data = await res.json();
-      if (data.success) {
-        setDeckId(data.deck_id);
-      } else {
-        console.error('Deck fetch failed:', data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch new deck:', err);
-    }
-  };
-
-  const calculateHandValue = (cards) => {
-    let value = 0;
-    let aceCount = 0;
-
-    cards.forEach(card => {
-      if (['KING', 'QUEEN', 'JACK'].includes(card.value)) {
-        value += 10;
-      } else if (card.value === 'ACE') {
-        value += 11;
-        aceCount += 1;
-      } else {
-        value += parseInt(card.value);
-      }
+    // Connect and set up listeners
+    socket.on("connect", () => {
+      console.log("Connected to backend via Socket.IO");
     });
 
-    while (value > 21 && aceCount > 0) {
-      value -= 10;
-      aceCount--;
-    }
+    // Listen for the game state update from the backend
+    socket.on("game_state", (state) => {
+      setPlayerCards(state.player_hand || []);
+      setDealerCards(state.dealer_hand || []);
+      setPlayerTurn(state.current_turn === playerId);
+      setGameOver(state.game_over);
+    });
 
-    return value;
+    // Receive playerId from server
+    socket.on("player_id", (id) => {
+      setPlayerId(id);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      socket.off("connect");
+      socket.off("game_state");
+      socket.off("player_id");
+    };
+  }, [playerId]);
+
+  const createRoom = async () => {
+    try {
+      const res = await fetch("http://localhost:5001/create-room", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json", // Ensure the correct headers are included
+        },
+      });
+
+      if (!res.ok) {
+        // If the response is not OK, throw an error
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setRoomId(data.room_id);
+      socket.emit("join", { room_id: data.room_id });  // Emit room creation event
+    } catch (error) {
+      console.error("Error creating room:", error);
+      // Optionally, you can show a user-friendly message
+    }
   };
 
-  const dealCards = async () => {
-    if (!deckId) return;
-    try {
-      const res = await fetch(`${API_BASE}/${deckId}/draw/?count=4`);
-      const data = await res.json();
-      if (!data.success || !data.cards || data.cards.length < 4) {
-        console.error('Card draw failed:', data);
-        return;
-      }
-      setPlayerCards([data.cards[0], data.cards[2]]);
-      setDealerCards([data.cards[1], data.cards[3]]);
-      setGameOver(false);
-      setPlayerTurn(true);
-    } catch (err) {
-      console.error('Deal error:', err);
-    }
+
+  const joinRoom = async (room) => {
+    const res = await fetch("http://localhost:5001/join-room", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room_id: room }),
+      credentials: "include"
+    });
+    const data = await res.json();
+    setRoomId(room);
+    socket.emit("join", { room_id: room });
   };
 
-  const hitCard = async () => {
-    if (!deckId || !playerTurn) return;
+  const startGame = async () => {
+    await fetch("http://localhost:5001/start-game", {
+      method: "POST",
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room_id: roomId }),
+      credentials: "include"
+    });
+  };
 
-    try {
-      const res = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
-      const data = await res.json();
-      if (!data.success || !data.cards || data.cards.length === 0) {
-        console.error('Failed to draw card:', data);
-        return;
-      }
-      const updatedHand = [...playerCards, data.cards[0]];
-      setPlayerCards(updatedHand);
-
-      const total = calculateHandValue(updatedHand);
-      if (total > 21) {
-        setGameOver(true);
-        setPlayerTurn(false);
-      }
-    } catch (err) {
-      console.error('Hit error:', err);
-    }
+  const hit = async () => {
+    await fetch("http://localhost:5001/hit", {
+      method: "POST",
+      credentials: "include"
+    });
   };
 
   const stay = async () => {
-    if (!deckId || !playerTurn) return;
-
-    setPlayerTurn(false);
-    let dealerHand = [...dealerCards];
-    let dealerTotal = calculateHandValue(dealerHand);
-
-    while (dealerTotal < 17) {
-      try {
-        const res = await fetch(`${API_BASE}/${deckId}/draw/?count=1`);
-        const data = await res.json();
-        if (!data.success || !data.cards || data.cards.length === 0) {
-          console.error('Dealer draw failed:', data);
-          break;
-        }
-        dealerHand.push(data.cards[0]);
-        dealerTotal = calculateHandValue(dealerHand);
-      } catch (err) {
-        console.error('Dealer draw error:', err);
-        break;
-      }
-    }
-
-    setDealerCards(dealerHand);
-    setGameOver(true);
-  };
-
-  const resetGame = async () => {
-    await fetchNewDeck();
-    setPlayerCards([]);
-    setDealerCards([]);
-    setGameOver(false);
-    setPlayerTurn(false);
+    await fetch("http://localhost:5001/stay", {
+      method: "POST",
+      credentials: "include"
+    });
   };
 
   const renderResult = () => {
-    const playerValue = calculateHandValue(playerCards);
-    const dealerValue = calculateHandValue(dealerCards);
-
-    if (playerValue > 21) return 'You busted! Game over!';
-    if (dealerValue > 21) return 'Dealer busted! You win!';
-    if (playerValue > dealerValue) return 'You win!';
-    if (playerValue === dealerValue) return "It's a tie!";
-    return 'Dealer wins!';
+    return gameOver ? "Game over. Check results!" : null;
   };
 
   return (
     <div className="game-wrapper">
-    <div className="blackjack-table">
-      <h1>Blackjack</h1>
-      <DealerHand cards={dealerCards} />
-      <p className="hand-value">
-        Dealer total: {gameOver ? calculateHandValue(dealerCards) : '??'}
-      </p>
+      <div className="blackjack-table">
+        <h1>Multiplayer Blackjack</h1>
+        {!roomId && (
+          <>
+            <button onClick={createRoom}>Create Room</button>
+            <button onClick={() => joinRoom(prompt("Enter Room ID"))}>Join Room</button>
+          </>
+        )}
 
-      <PlayerHand cards={playerCards} />
-      <p className="hand-value">
-        Player total: {calculateHandValue(playerCards)}
-      </p>
-
-      <Controls
-        onDeal={dealCards}
-        onHit={hitCard}
-        onStay={stay}
-        onReset={resetGame}
-        disabled={!playerTurn}
-        gameOver={gameOver}
-        canDeal={!playerTurn && deckId}
-      />
-
-      {gameOver && (
-        <div className="game-over-message">
-          <strong>{renderResult()}</strong>
-        </div>
-      )}
+        {roomId && (
+          <>
+            <DealerHand cards={dealerCards} />
+            <PlayerHand cards={playerCards} />
+            <Controls
+              onDeal={startGame}
+              onHit={hit}
+              onStay={stay}
+              onReset={() => setRoomId(null)}
+              disabled={!playerTurn}
+              gameOver={gameOver}
+              canDeal={true}
+            />
+            {gameOver && <div className="game-over-message"><strong>{renderResult()}</strong></div>}
+          </>
+        )}
+      </div>
+      <Chatbox socket={socket} roomId={roomId} />
     </div>
-
-    <div className="avatar-ring">
-  {[...Array(5)].map((_, idx) => (
-    <div key={idx} className="avatar-avatar">
-      <img
-        src="https://img.icons8.com/external-icongeek26-outline-gradient-icongeek26/64/external-user-casino-icongeek26-outline-gradient-icongeek26.png"
-        alt={`Player ${idx + 1}`}
-      />
-      <span className="avatar-label">Player {idx + 1}</span>
-    </div>
-  ))}
-
-</div>
-  </div>
-);
+  );
 }
