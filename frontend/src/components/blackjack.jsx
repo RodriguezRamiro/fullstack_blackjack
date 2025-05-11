@@ -2,7 +2,7 @@
 
 
 import React, { useEffect, useState } from 'react';
-import socket from '../socket'; // assuming you saved it as shown
+import socket from '../socket';
 import DealerHand from './dealerhand';
 import PlayerHand from './playerhand';
 import Controls from './controls';
@@ -10,7 +10,7 @@ import '../styles/blackjackgame.css';
 import Chatbox from './chatbox';
 
 export default function BlackjackGame() {
-  const [roomId, setRoomId] = useState(null);
+  const [tableId, setTableId] = useState(null);
   const [playerId, setPlayerId] = useState(null);
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
@@ -23,7 +23,6 @@ export default function BlackjackGame() {
       console.log("Connected to backend via Socket.IO");
     });
 
-    // Listen for the game state update from the backend
     socket.on("game_state", (state) => {
       setPlayerCards(state.player_hand || []);
       setDealerCards(state.dealer_hand || []);
@@ -31,12 +30,10 @@ export default function BlackjackGame() {
       setGameOver(state.game_over);
     });
 
-    // Receive playerId from server
     socket.on("player_id", (id) => {
       setPlayerId(id);
     });
 
-    // Cleanup on unmount
     return () => {
       socket.off("connect");
       socket.off("game_state");
@@ -44,55 +41,76 @@ export default function BlackjackGame() {
     };
   }, [playerId]);
 
-  const createRoom = async () => {
+  const createTable = async () => {
     try {
-      const res = await fetch("http://localhost:5001/create-room", {
+      const res = await fetch("/create-room", {
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json", // Ensure the correct headers are included
+          "Content-Type": "application/json"
         },
       });
 
-      if (!res.ok) {
-        // If the response is not OK, throw an error
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const data = await res.json();
-      setRoomId(data.room_id);
-      socket.emit("join", { room_id: data.room_id });  // Emit room creation event
+      console.log("Created Room:", data);
+
+      setTableId(data.tableId);
+      console.log("Emitting join event for table:", data.tableId);
+
+      socket.emit("join", { tableId: data.tableId });
     } catch (error) {
-      console.error("Error creating room:", error);
-      // Optionally, you can show a user-friendly message
+      console.error("Error creating table:", error);
     }
   };
 
+  const joinTable = async (table) => {
+    try {
+      const res = await fetch("http://localhost:5001/join-room", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tableId: table }),
+        credentials: "include"
+      });
 
-  const joinRoom = async (room) => {
-    const res = await fetch("http://localhost:5001/join-room", {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ room_id: room }),
-      credentials: "include"
-    });
-    const data = await res.json();
-    setRoomId(room);
-    socket.emit("join", { room_id: room });
+      const data = await res.json();
+      setTableId(table);
+      console.log("Emitting join event for table:", data.tableId);
+      socket.emit("join", { tableId: data.tableId });
+    } catch (error) {
+      console.error("Error joining table:", error);
+    }
   };
 
   const startGame = async () => {
-    await fetch("http://localhost:5001/start-game", {
-      method: "POST",
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ room_id: roomId }),
-      credentials: "include"
-    });
+    try {
+      const response = await fetch('http://localhost:5001/start-game', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tableId: tableId }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start the game');
+      }
+      const data = await response.json();
+      console.log('Game started', data);
+    } catch (error) {
+      console.error('Error starting the game:', error);
+    }
   };
 
   const hit = async () => {
     await fetch("http://localhost:5001/hit", {
       method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ tableId: tableId, playerId: playerId }),
       credentials: "include"
     });
   };
@@ -100,6 +118,10 @@ export default function BlackjackGame() {
   const stay = async () => {
     await fetch("http://localhost:5001/stay", {
       method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ tableId: tableId, playerId: playerId }),
       credentials: "include"
     });
   };
@@ -111,32 +133,42 @@ export default function BlackjackGame() {
   return (
     <div className="game-wrapper">
       <div className="blackjack-table">
-        <h1>Multiplayer Blackjack</h1>
-        {!roomId && (
+        <h1>Blackjack</h1>
+
+        {!tableId && (
           <>
-            <button onClick={createRoom}>Create Room</button>
-            <button onClick={() => joinRoom(prompt("Enter Room ID"))}>Join Room</button>
+            <button onClick={createTable}>Create Table</button>
+            <button onClick={() => joinTable(prompt("Enter Table ID"))}>Join Table</button>
           </>
         )}
 
-        {roomId && (
+        {tableId && (
           <>
+            <p><strong>Table ID:</strong> {tableId}</p>
+            <button className='copy-button' onClick={() => {
+              navigator.clipboard.writeText(tableId);}}
+              title="Copy Table ID">📋</button>
             <DealerHand cards={dealerCards} />
             <PlayerHand cards={playerCards} />
             <Controls
               onDeal={startGame}
               onHit={hit}
               onStay={stay}
-              onReset={() => setRoomId(null)}
+              onReset={() => setTableId(null)}
               disabled={!playerTurn}
               gameOver={gameOver}
               canDeal={true}
             />
-            {gameOver && <div className="game-over-message"><strong>{renderResult()}</strong></div>}
+            {gameOver && (
+              <div className="game-over-message">
+                <strong>{renderResult()}</strong>
+              </div>
+            )}
           </>
         )}
       </div>
-      <Chatbox socket={socket} roomId={roomId} />
+
+      <Chatbox socket={socket} roomId={tableId} />
     </div>
   );
 }

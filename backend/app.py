@@ -5,31 +5,40 @@ import uuid
 import random
 
 app = Flask(__name__)
-CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+
+# Enable CORS for the frontend (React app running on localhost:3000) and supports credentials
+CORS(app, origins=["http://localhost:3000"], supports_credentials=True)
+socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", async_mode="eventlet")
 
 rooms = {}
 
+# Event handlers and game logic as before
 @socketio.on("join")
 def handle_join(data):
-    room_id = data["room_id"]
-    # You could add logic to track player joining the room here
-    emit("game_state", {"message": "Player joined the game!"}, room=room_id)
+    table_id = data["tableId"]
+    if table_id not in rooms:
+        emit("error", {"error": "Room does not exist."})
+        return
+
+    emit("game_state", {"message": "Player joined the game!"}, room=table_id)
 
 @socketio.on("hit")
 def handle_hit(data):
-    room_id = data.get("room_id")  # Corrected this
-    if room_id not in rooms:
-        return  # Handle error if room does not exist
+    table_id = data.get("tableId")
+    if table_id not in rooms:
+        emit("error", {"error": "Room does not exist."})
+        return
 
-    room = rooms[room_id]
-    player_id = data.get("player_id")
+    room = rooms[table_id]
+    player_id = data.get("playerId")
     player = next((p for p in room["players"] if p["id"] == player_id), None)
 
     if not player:
-        return jsonify({"error": "Player not found."}), 404
+        emit("error", {"error": "Player not found."})
+        return
     if not room["deck"]:
-        return jsonify({"error": "Deck is empty."}), 404
+        emit("error", {"error": "Deck is empty."})
+        return
 
     card = room["deck"].pop()
     player["hand"].append(card)
@@ -37,14 +46,15 @@ def handle_hit(data):
 
     if player["score"] > 21:
         player["is_standing"] = True
-        # Optional: end game logic
 
     emit("game_state", {
         "player_hand": player["hand"],
-        "dealer_hand": room["deck"],
+        "score": player["score"],
         "current_turn": room["turn"],
-        "game_over": any(p["is_standing"] for p in room["players"]),
-    }, room=room_id)
+        "game_over": all(p["is_standing"] for p in room["players"]),
+        "players": room["players"],
+    }, room=table_id)
+
 
 @app.route("/")
 def index():
@@ -52,27 +62,25 @@ def index():
 
 @app.route("/create-room", methods=["POST"])
 def create_room():
-    print("Received request to create room")
-    room_id = str(uuid.uuid4())[:8]
-    rooms[room_id] = {
+    table_id = str(uuid.uuid4())[:8]
+    rooms[table_id] = {
         "players": [],
         "started": False,
         "deck": [],
         "turn": None,
         "state": {}
     }
-    print(f"Room {room_id} created")
-    return jsonify({"room_id": room_id, "message": "Room created successfully."}), 200
+    return jsonify({"tableId": table_id, "message": "Room created successfully."}), 200
 
 @app.route("/join-room", methods=["POST"])
 def join_room():
     data = request.get_json()
-    room_id = data.get("room_id")
+    table_id = data.get("tableId")
     player_name = data.get("player_name")
 
-    if room_id not in rooms:
+    if table_id not in rooms:
         return jsonify({"error": "Room does not exist."}), 404
-    if len(rooms[room_id]["players"]) >= 2:
+    if len(rooms[table_id]["players"]) >= 2:
         return jsonify({"error": "Room is full."}), 403
 
     player_id = str(uuid.uuid4())[:8]
@@ -83,13 +91,13 @@ def join_room():
         "score": 0,
         "is_standing": False
     }
-    rooms[room_id]["players"].append(player)
-    emit("game_state", {"message": f"{player_name} joined the room!"}, room=room_id)
+    rooms[table_id]["players"].append(player)
+    emit("game_state", {"message": f"{player_name} joined the room!"}, room=table_id)
 
     return jsonify({
         "message": "Joined room successfully.",
         "player_id": player_id,
-        "room": rooms[room_id]
+        "room": rooms[table_id]
     }), 200
 
 def create_deck():
@@ -119,13 +127,16 @@ def calculate_score(hand):
 @app.route("/start-game", methods=["POST"])
 def start_game():
     data = request.get_json()
-    room_id = data.get("room_id")
+    table_id = data.get("tableId")
+    room = rooms.get(table_id)
 
-    if room_id not in rooms:
-        return jsonify({"error": "Room does not exist."}), 404
-    room = rooms[room_id]
-    if len(room["players"]) < 2:
-        return jsonify({"error": "Need 2 players to start."}), 400
+    if not rooms:
+        return jsonify({"error": "Table not found."}), 404
+
+
+    # Allow game to start with at least one player
+    if len(room["players"]) < 1:
+        return jsonify({"error": "Need at least 1 player to start."}), 400
 
     deck = create_deck()
     room["deck"] = deck
@@ -136,17 +147,26 @@ def start_game():
         player["hand"] = [deck.pop(), deck.pop()]
         player["score"] = calculate_score(player["hand"])
 
+    emit("game_state", {
+        "message": "Game started.",
+        "players": room["players"],
+        "deck": room["deck"],
+        "current_turn": room["turn"],
+        "game_over": False,
+    }, room=table_id)
+
     return jsonify({"message": "Game started.", "room": room}), 200
+
 
 @app.route("/hit", methods=["POST"])
 def hit():
     data = request.get_json()
-    room_id = data.get("room_id")
+    table_id = data.get("tableId")
     player_id = data.get("player_id")
 
-    if room_id not in rooms:
+    if table_id not in rooms:
         return jsonify({"error": "Room does not exist."}), 404
-    room = rooms[room_id]
+    room = rooms[table_id]
     if room["turn"] != player_id:
         return jsonify({"error": "Not your turn."}), 403
 
@@ -162,14 +182,13 @@ def hit():
 
     if player["score"] > 21:
         player["is_standing"] = True
-        # Optional: end game logic
 
     emit("game_state", {
         "player_hand": player["hand"],
         "dealer_hand": room["deck"],
         "current_turn": room["turn"],
         "game_over": any(p["is_standing"] for p in room["players"]),
-    }, room=room_id)
+    }, room=table_id)
 
     return jsonify({
         "message": "Card dealt.",
@@ -182,12 +201,12 @@ def hit():
 @app.route("/stay", methods=["POST"])
 def stay():
     data = request.get_json()
-    room_id = data.get("room_id")
+    table_id = data.get("tableId")
     player_id = data.get("player_id")
 
-    if room_id not in rooms:
+    if table_id not in rooms:
         return jsonify({"error": "Room does not exist."}), 404
-    room = rooms[room_id]
+    room = rooms[table_id]
     if room["turn"] != player_id:
         return jsonify({"error": "Not your turn."}), 403
 
@@ -206,7 +225,7 @@ def stay():
     emit("game_state", {
         "message": f"{player['name']} stands.",
         "next_turn": room["turn"]
-    }, room=room_id)
+    }, room=table_id)
 
     return jsonify({
         "message": "Player stands.",
@@ -215,11 +234,11 @@ def stay():
 
 @app.route("/state", methods=["GET"])
 def get_state():
-    room_id = request.args.get("room_id")
+    table_id = request.args.get("tableId")
 
-    if room_id not in rooms:
+    if table_id not in rooms:
         return jsonify({"error": "Room does not exist."}), 400
-    room = rooms[room_id]
+    room = rooms[table_id]
 
     sanitized_players = [
         {
@@ -232,17 +251,15 @@ def get_state():
     ]
 
     return jsonify({
-        "room_id": room_id,
+        "tableId": table_id,
         "players": sanitized_players,
         "turn": room["turn"],
         "started": room["started"],
         "deck_count": len(room["deck"])
     }), 200
 
-@socketio.on("test")
-def handle_test(data):
-    print("Received test message:", data)
-    socketio.emit("test_response", {"message": "Hello from server!"})
 
 if __name__ == "__main__":
+    print("✅ Registered routes:")
+    print(app.url_map)
     socketio.run(app, debug=True, port=5001)

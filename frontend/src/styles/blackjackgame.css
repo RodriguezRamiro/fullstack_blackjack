@@ -1,12 +1,11 @@
 /* General Pages Styles */
-
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #0b3d0b;
+  background: #588958;
   display: flex;
   justify-content: center;
-  align-items: left;
+  align-items: flex-start;
   height: 100vh;
   flex-direction: column;
 }
@@ -14,12 +13,14 @@ body {
 /* Blackjack Table Styling */
 .blackjack-table {
   margin-left: auto;
-  background: radial-gradient(circle at bottom #1d3b33 100%);
+  background: linear-gradient(135deg, #088383, #2E8B57, #228b84);
+  background-size: 300% 300%;
+  animation: gradient-rotate 9s linear infinite;
   width: 100%;
   max-width: 1200px;
   height: 800px;
   border-radius: 0 0 200px 200px;
-  box-shadow: 0 0 30px rgba(0,0,0 0.5);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
   padding: 30px 20px 100px;
   display: flex;
   flex-direction: column;
@@ -27,66 +28,88 @@ body {
   overflow: hidden;
 }
 
+/* Table ID and Copy Button */
+.table-id-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.copy-button {
+  background-color: #222;
+  color: #fff;
+  border: none;
+  padding: 0.1rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.copy-button:hover {
+  background-color: #444;
+}
+
+/* Header Styles */
 h1 {
   color: black;
   margin: 0;
-  text-align: left;
+  text-align: center;
   position: relative;
   z-index: 10;
   transition: color 0.9s ease;
-  background: linear-gardient(135deg, #ebeb1c, #ff4b2b, #0dcd10);
+  background: linear-gradient(135deg, #ebeb1c, #ff4b2b, #0dcd10);
   background-size: 300% 300%;
-  animation: gardient-rotate 9s linear infinite;
+  animation: gradient-rotate 9s linear infinite;
   border: transparent;
-  border-radius: 50%
+  border-radius: 50%;
 }
 
-/* Chatbox Styling */
+/* Chatbox Styles */
 .chatbox-container {
   position: absolute;
-  bottom: 20%;
-  right: 20px;
-  width: 300px;
-  height: 100;
+  bottom: 7%;
+  right: 0%;
+  width: 400px;
+  max-height: 900px;
   background: rgba(0, 0, 0, 0.85);
   border: 2px solid #00b159;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 100px;
+  z-index: 100;
 }
 
-/*  Chat Messages */
 .chat-messages {
   flex: 1;
   padding: 10px;
-  overflow-y: scroll;
-  color: azure;
+  overflow-y: auto;
+  color: white;
   font-size: 0.9rem;
 }
 
-/* Chat input form */
 .chat-input-form {
   display: flex;
-  border-top: 1px solid #b12900;
+  border-top: 1px solid #00b159;
 }
 
 .chat-input {
   flex: 1;
   padding: 10px;
   border: none;
+  outline: none;
   background: #1a1a1a;
   color: white;
 }
 
 .chat-send-btn {
-  background-color: #0dcd10;
+  background-color: #00b159;
   color: white;
   border: none;
   padding: 10px;
   cursor: pointer;
-
 }
 
 /* Controls Section */
@@ -108,43 +131,6 @@ button {
   border-radius: 8px;
   margin: 10px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  width: 140px;
-  text-align: center;
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.35);
-}
-
-button:hover{
-  background-color: #b8d8b8;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-button:disabled {
-  background-color: #718371;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* Controls Section */
-.controls {
-  margin-top: 30px;
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* Buttons */
- button{
-  background-color:#007f3f;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  font-size: 1rem;
-  border-radius: 8px;
-  margin: 10px;
-  cursor: pointer;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
   width: 140px;
   text-align: center;
@@ -153,23 +139,13 @@ button:disabled {
 
 button:hover {
   background-color: #00b159;
-  box-shadow:0 6px 10px rgba(0, 0, 0, 0.7)
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.7);
 }
 
 button:disabled {
   background-color: #b8d8b8;
   cursor: not-allowed;
   box-shadow: none;
-}
-
-/* Control Section */
-.controls {
-  margin-top: 30px;
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  flex-wrap: wrap;
-
 }
 
 /* Card Row */
@@ -180,7 +156,6 @@ button:disabled {
   margin-top: 10px;
   min-height: 110px;
 }
-
 
 /* Card Images */
 .card-img {
@@ -274,49 +249,11 @@ button:disabled {
   }
 }
 
-/* Chatbox styles */
-
-.chatbox-container {
-  position: absolute;
-  bottom: 7%;
-  right: 0%;
-  width: 400px;
-  max-height: 900px;
-  background: rgba(0, 0, 0, 0.85);
-  border: 2px solid #00b159;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 100;
-}
-
-.chat-messages {
-  flex: 1;
-  padding: 10px;
-  overflow-y: auto;
-  color: white;
-  font-size: 0.9rem;
-}
-
-.chat-input-form {
-  display: flex;
-  border-top: 1px solid #00b159;
-}
-
-.chat-input {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  outline: none;
-  background: #1a1a1a;
-  color: white;
-}
-
-.chat-send-btn {
-  background-color: #00b159;
-  color: white;
-  border: none;
-  padding: 10px;
-  cursor: pointer;
+/* Miscellaneous Styles */
+h1 {
+  background: linear-gradient(135deg, #ebeb1c, #ff4b2b, #0dcd10);
+  background-size: 300% 300%;
+  animation: gradient-rotate 9s linear infinite;
+  border: transparent;
+  border-radius: 50%;
 }
