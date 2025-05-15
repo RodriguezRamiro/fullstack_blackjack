@@ -52,10 +52,10 @@ export default function DealerHand({ cards = [], reveal = true }) {
         {displayCards.length > 0 ? (
           displayCards.map((card, idx) => (
             <img
-              key={card.code !== 'Hidden' ? card.code : `hidden-${idx}`}
-              src={card.image}
-              alt={card.code === 'Hidden' ? 'Facedown card' : `Card ${card.code}`}
-              className="card-img"
+            key={card.code !== 'Hidden' ? `${card.code}-${idx}` : `hidden-${idx}`}
+            src={card.image}
+            alt={card.code === 'Hidden' ? 'Facedown card' : `Card ${card.code}`}
+            className="card-img"
             />
           ))
         ) : (

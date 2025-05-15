@@ -6,7 +6,7 @@ import uuid
 
 app = Flask(__name__)
 app.secret_key = "Super-secret_key"
-CORS(app)
+CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", async_mode="eventlet")
 
 rooms = {}
