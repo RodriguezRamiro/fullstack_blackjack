@@ -11,22 +11,23 @@ import Chatbox from './chatbox';
 
 export default function BlackjackGame() {
   const [tableId, setTableId] = useState(null);
-  const [playerId, setPlayerId] = useState(null);
+  const [playerId, setPlayerId] = useState(() => crypto.randomUUID());
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
   const [playerTurn, setPlayerTurn] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [username] = useState("Player");
 
   useEffect(() => {
-    // Connect and set up listeners
     socket.on("connect", () => {
       console.log("Connected to backend via Socket.IO");
     });
 
     socket.on("game_state", (state) => {
-      setPlayerCards(state.player_hand || []);
-      setDealerCards(state.dealer_hand || []);
-      setPlayerTurn(state.current_turn === playerId);
+      const player = state.players[playerId];
+      setPlayerCards(player ? player.hand : []);
+      setDealerCards(state.dealer.hand);
+      setPlayerTurn(player ? player.status === 'playing' : false);
       setGameOver(state.game_over);
     });
 
@@ -39,7 +40,7 @@ export default function BlackjackGame() {
       socket.off("game_state");
       socket.off("player_id");
     };
-  }, [playerId]);
+  }, []);
 
   const createTable = async () => {
     try {
@@ -51,15 +52,9 @@ export default function BlackjackGame() {
         },
       });
 
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-
       const data = await res.json();
-      console.log("Created Room:", data);
-
       setTableId(data.tableId);
-      console.log("Emitting join event for table:", data.tableId);
-
-      socket.emit("join", { tableId: data.tableId });
+      socket.emit("join", { tableId: data.tableId, playerId, username });
     } catch (error) {
       console.error("Error creating table:", error);
     }
@@ -76,8 +71,7 @@ export default function BlackjackGame() {
 
       const data = await res.json();
       setTableId(table);
-      console.log("Emitting join event for table:", data.tableId);
-      socket.emit("join", { tableId: data.tableId });
+      socket.emit("join", { tableId: data.tableId, playerId, username });
     } catch (error) {
       console.error("Error joining table:", error);
     }
@@ -90,19 +84,18 @@ export default function BlackjackGame() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tableId: tableId }),
+        body: JSON.stringify({ tableId, playerId }),
         credentials: 'include',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to start the game');
-      }
       const data = await response.json();
-      console.log('Game started', data);
+      console.log('Game started at table:', data.tableId);
     } catch (error) {
       console.error('Error starting the game:', error);
     }
   };
+
+
 
   const hit = async () => {
     await fetch("http://localhost:5001/hit", {
@@ -110,7 +103,7 @@ export default function BlackjackGame() {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ tableId: tableId, playerId: playerId }),
+      body: JSON.stringify({ tableId, playerId }),
       credentials: "include"
     });
   };
@@ -121,7 +114,7 @@ export default function BlackjackGame() {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ tableId: tableId, playerId: playerId }),
+      body: JSON.stringify({ tableId, playerId }),
       credentials: "include"
     });
   };
