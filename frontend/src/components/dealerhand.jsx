@@ -5,26 +5,30 @@ import dealerImage from '../assets/icons8-croupier-96 (2).png';
 
 export default function DealerHand({ cards = [], reveal = true }) {
   const calculateHandValue = (cards) => {
-    let value = 0;
+    let total = 0;
     let aceCount = 0;
 
     cards.forEach(card => {
-      if (['KING', 'QUEEN', 'JACK'].includes(card.value)) {
-        value += 10;
-      } else if (card.value === 'ACE') {
-        value += 11;
+      const value = card?.rank?.toUpperCase();
+
+      if (!value) return;
+
+      if (['K', 'Q', 'J'].includes(value)) {
+        total += 10;
+      } else if (value === 'A') {
+        total += 11;
         aceCount += 1;
-      } else {
-        value += parseInt(card.value, 10);
+      } else if (!isNaN(value)) {
+        total += parseInt(value, 10);
       }
     });
 
-    while (value > 21 && aceCount > 0) {
-      value -= 10;
+    while (total > 21 && aceCount > 0) {
+      total -= 10;
       aceCount--;
     }
 
-    return value;
+    return total;
   };
 
   const displayCards = reveal
@@ -34,7 +38,7 @@ export default function DealerHand({ cards = [], reveal = true }) {
           ? {
               image: '/card-back.png',
               code: 'Hidden',
-              value: 'Hidden',
+              rank: 'Hidden',
             }
           : card
       );
@@ -54,7 +58,7 @@ export default function DealerHand({ cards = [], reveal = true }) {
             <img
             key={card.code !== 'Hidden' ? `${card.code}-${idx}` : `hidden-${idx}`}
             src={card.image}
-            alt={card.code === 'Hidden' ? 'Facedown card' : `Card ${card.code}`}
+            alt={card.rank === 'Hidden' ? 'Facedown card' : `Card ${card.code}`}
             className="card-img"
             />
           ))
@@ -65,7 +69,7 @@ export default function DealerHand({ cards = [], reveal = true }) {
 
       {reveal && cards.length > 0 && (
         <div className="hand-value">
-          <p>Total Value: {calculateHandValue(cards)}</p>
+          <p>Total: {calculateHandValue(cards)}</p>
         </div>
       )}
     </div>

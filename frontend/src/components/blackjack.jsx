@@ -78,6 +78,15 @@ export default function BlackjackGame() {
   };
 
   const startGame = async () => {
+    console.log('Attempting to start game with:');
+  console.log('tableId:', tableId);
+  console.log('playerId:', playerId);
+
+  if (!tableId || !playerId) {
+    console.error('Missing tableId or playerId');
+    return;
+  }
+
     try {
       const response = await fetch('http://localhost:5001/start-game', {
         method: 'POST',
@@ -98,25 +107,11 @@ export default function BlackjackGame() {
 
 
   const hit = async () => {
-    await fetch("http://localhost:5001/hit", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ tableId, playerId }),
-      credentials: "include"
-    });
+    socket.emit("hit", { tableId, playerId });
   };
 
   const stay = async () => {
-    await fetch("http://localhost:5001/stay", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ tableId, playerId }),
-      credentials: "include"
-    });
+    socket.emit("stay", { tableId, playerId });
   };
 
   const renderResult = () => {

@@ -5,36 +5,43 @@ import playerImage from '../assets/icons8-croupier-64 (1).png';
 
 export default function PlayerHand({ cards = [] }) {
   const calculateHandValue = (cards) => {
-    let value = 0;
+    let total = 0;
     let aceCount = 0;
 
-    cards.forEach(card => {
-      if (['KING', 'QUEEN', 'JACK'].includes(card.value)) {
-        value += 10;
-      } else if (card.value === 'ACE') {
-        value += 11;
+    cards.forEach((card) => {
+      const value = card?.rank?.toUpperCase();
+
+      if (!value) return;
+
+      if (['K', 'Q', 'J'].includes(value)) {
+        total += 10;
+      } else if (value === 'A') {
+        total += 11;
         aceCount++;
-      } else {
-        value += parseInt(card.value);
+      } else if (!isNaN(value)) {
+        total += parseInt(value, 10);
       }
     });
 
-    while (value > 21 && aceCount > 0) {
-      value -= 10;
+    while (total > 21 && aceCount > 0) {
+      total -= 10;
       aceCount--;
     }
 
-    return value;
+    return total;
   };
+
+  // Debugging: Uncomment this to check card values
+  console.log("Player cards:", cards);
 
   return (
     <div className="player-area">
       {/* Player Avatar */}
       <div className="player-avatar">
-      <img
-  src={playerImage}
-  alt="Player Avatar"
-  className="player-avatar"
+        <img
+          src={playerImage}
+          alt="Player Avatar"
+          className="player-avatar"
         />
       </div>
       <h2>Player's Hand</h2>
@@ -43,7 +50,7 @@ export default function PlayerHand({ cards = [] }) {
         {cards.length > 0 ? (
           cards.map((card, idx) => (
             <img
-              key={idx}
+              key={card.code ? `${card.code}-${idx}` : `card-${idx}`}
               src={card.image}
               alt={`Card ${card.value} of ${card.suit}`}
               className="card-img"
@@ -56,7 +63,7 @@ export default function PlayerHand({ cards = [] }) {
 
       {cards.length > 0 && (
         <div className="hand-value">
-          <p>Total Value: {calculateHandValue(cards)}</p>
+          <p>Total: {calculateHandValue(cards)}</p>
         </div>
       )}
     </div>

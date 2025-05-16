@@ -3,6 +3,7 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_cors import CORS
 import random
 import uuid
+import requests
 
 app = Flask(__name__)
 app.secret_key = "Super-secret_key"
@@ -11,11 +12,36 @@ socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", async_mod
 
 rooms = {}
 
-def create_deck():
-    suits = ["♠", "♥", "♦", "♣"]
-    ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
-    return [{"suit": suit, "rank": rank} for suit in suits for rank in ranks]
 
+def create_deck():
+    suits_map = {
+        "SPADES": "♠",
+        "HEARTS": "♥",
+        "DIAMONDS": "♦",
+        "CLUBS": "♣"
+    }
+    rank_map = {
+        "ACE": "A",
+        "KING": "K",
+        "QUEEN": "Q",
+        "JACK": "J"
+    }
+
+    # Fetch a full 52-card deck
+    response = requests.get("https://deckofcardsapi.com/api/deck/new/draw/?count=52")
+    if response.status_code != 200:
+        raise Exception("Failed to fetch deck from external API.")
+
+    cards = response.json()["cards"]
+
+    return [
+        {
+            "suit": suits_map.get(card["suit"], card["suit"]),
+            "rank": rank_map.get(card["value"], card["value"]),
+            "image": card["image"]
+        }
+        for card in cards
+    ]
 def calculate_score(hand):
     score = 0
     aces = 0
