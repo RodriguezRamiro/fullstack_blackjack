@@ -183,9 +183,33 @@ button:disabled {
 .game-over-message {
   margin-top: 20px;
   font-size: 1.5rem;
-  color: white;
+  color: #fff;
   font-weight: bold;
   text-align: center;
+
+  /* Add a glowing effect */
+  text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 20px #ff4500;
+
+  /* Background to highlight */
+  background-color: rgba(255, 0, 0, 0.7);
+  padding: 10px 20px;
+  border-radius: 8px;
+  display: inline-block;
+
+  /* Add a subtle scale animation */
+  animation: popIn 0.5s ease forwards;
+}
+
+/* Pop animation */
+@keyframes popIn {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Avatar Ring */

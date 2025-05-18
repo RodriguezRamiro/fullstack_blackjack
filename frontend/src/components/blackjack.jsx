@@ -60,27 +60,16 @@ export default function BlackjackGame() {
     }
   };
 
-  const joinTable = async (table) => {
-    try {
-      const res = await fetch("http://localhost:5001/join-room", {
-        method: "POST",
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tableId: table }),
-        credentials: "include"
-      });
-
-      const data = await res.json();
-      setTableId(table);
-      socket.emit("join", { tableId: data.tableId, playerId, username });
-    } catch (error) {
-      console.error("Error joining table:", error);
-    }
+  const joinTable = (table) => {
+    setTableId(table);
+    socket.emit("join", { tableId: table, playerId, username });
   };
 
   const startGame = async () => {
     console.log('Attempting to start game with:');
   console.log('tableId:', tableId);
   console.log('playerId:', playerId);
+
 
   if (!tableId || !playerId) {
     console.error('Missing tableId or playerId');
@@ -147,6 +136,7 @@ export default function BlackjackGame() {
               gameOver={gameOver}
               canDeal={true}
             />
+
             {gameOver && (
               <div className="game-over-message">
                 <strong>{renderResult()}</strong>
@@ -156,7 +146,12 @@ export default function BlackjackGame() {
         )}
       </div>
 
-      <Chatbox socket={socket} roomId={tableId} />
+      <Chatbox
+        socket={socket}
+        tableId={tableId}
+        playerId={playerId}
+        username={username}
+      />
     </div>
   );
 }

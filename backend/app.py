@@ -84,11 +84,16 @@ def start_game():
 
     room = rooms[table_id]
 
-    if room["started"]:
-        return jsonify({"message": "Game already started."}), 400
-
     if player_id not in room["players"]:
         return jsonify({"error": "Player not found in room."}), 400
+
+    if room["started"] and not room["game_over"]:
+        return jsonify({"message": "Game already in progress."}), 400
+
+    #Reset the game state regardless of current game status
+    room["deck"] = create_deck()
+    random.shuffle(room["deck"])
+    room["game_over"] = False
 
     random.shuffle(room["deck"])
 
@@ -96,9 +101,11 @@ def start_game():
         hand = [room["deck"].pop(), room["deck"].pop()]
         info.update({"hand": hand, "score": calculate_score(hand), "status": "playing"})
 
-    room["dealer"]["hand"] = [room["deck"].pop()]
+    room["dealer"] = {
+    "hand": [room["deck"].pop()],
+    "score": 0
+}
     room["dealer"]["score"] = calculate_score(room["dealer"]["hand"])
-    room["started"] = True
 
     socketio.emit("game_state", {
         "players": room["players"],
@@ -204,6 +211,27 @@ def handle_stay(data):
 @socketio.on("disconnect")
 def handle_disconnect():
     print("Client disconnected.")
+
+
+@socketio.on("chat_message")
+def handle_chat_message(data):
+    table_id = data.get("tableId")
+    player_id = data.get("playerId")
+    message = data.get("message")
+    username = None
+
+    # Find username if player exists
+    if table_id in rooms and player_id in rooms[table_id]["players"]:
+        username = rooms[table_id]["players"][player_id]["username"]
+
+    if not table_id or not player_id or not message:
+        return # ignore bad requests
+
+    emit("chat_message", {
+        "playerId": player_id,
+        "username": username,
+        "message": message
+    }, room= table_id)
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5001, debug=True)
