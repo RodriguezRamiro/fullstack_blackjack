@@ -8,7 +8,15 @@ const Chatbox = ({ socket, tableId, playerId, username }) => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !tableId || !playerId || !username) return;
+
+    console.log("Emitting join from chatbox")
+    socket.emit("join", {
+      tableId,
+      playerId,
+      username,
+
+    });
 
     socket.on("chat_message", (msg) => {
       console.log("Received message:", msg);
@@ -18,7 +26,7 @@ const Chatbox = ({ socket, tableId, playerId, username }) => {
     return () => {
       socket.off("chat_message");
     };
-  }, [socket]);
+  }, [socket, tableId, playerId, username]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();

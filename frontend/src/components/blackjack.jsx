@@ -60,9 +60,9 @@ export default function BlackjackGame() {
     }
   };
 
-  const joinTable = (table) => {
-    setTableId(table);
-    socket.emit("join", { tableId: table, playerId, username });
+  const joinTable = (incomingTableId) => {
+    setTableId(incomingTableId);
+    socket.emit("join", { tableId: incomingTableId, playerId, username });
   };
 
   const startGame = async () => {

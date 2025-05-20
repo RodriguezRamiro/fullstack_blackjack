@@ -215,6 +215,7 @@ def handle_disconnect():
 
 @socketio.on("chat_message")
 def handle_chat_message(data):
+    print("Chat recieved:", data) # <-- debug
     table_id = data.get("tableId")
     player_id = data.get("playerId")
     message = data.get("message")
