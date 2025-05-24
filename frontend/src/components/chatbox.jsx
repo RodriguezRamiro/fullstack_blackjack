@@ -2,42 +2,39 @@
 
 import { useEffect, useState } from "react";
 
-
 const Chatbox = ({ socket, tableId, playerId, username }) => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
 
+  // Only listen for incoming messages
   useEffect(() => {
-    if (!socket || !tableId || !playerId || !username) return;
+    if (!socket) return;
 
-    console.log("Emitting join from chatbox")
-    socket.emit("join", {
-      tableId,
-      playerId,
-      username,
 
-    });
-
-    socket.on("chat_message", (msg) => {
+    const handleChatMessage = (msg) => {
       console.log("Received message:", msg);
       setMessages((prev) => [...prev, msg]);
-    });
+    };
+
+    socket.on("chat_message", handleChatMessage);
 
     return () => {
-      socket.off("chat_message");
+      socket.off("chat_message", handleChatMessage);
     };
-  }, [socket, tableId, playerId, username]);
+  }, [socket]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    console.log("sending Message"); // debug log
     if (!message.trim() || !socket) return;
 
     const newMsg = { tableId, playerId, username, message };
+    console.log("About to emit chat_message:", newMsg);
     socket.emit("chat_message", newMsg);
-    setMessages((prev) => [...prev, newMsg]);
+    console.log("chat_message emitted!")
     setMessage("");
   };
+
+
 
   return (
     <div className="chatbox-container">
@@ -62,6 +59,5 @@ const Chatbox = ({ socket, tableId, playerId, username }) => {
     </div>
   );
 };
-
 
 export default Chatbox;

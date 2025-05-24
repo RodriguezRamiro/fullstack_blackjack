@@ -10,6 +10,7 @@ import '../styles/blackjackgame.css';
 import Chatbox from './chatbox';
 
 export default function BlackjackGame() {
+  const [hasJoined, setHasJoined] = useState(false);
   const [tableId, setTableId] = useState(null);
   const [playerId, setPlayerId] = useState(() => crypto.randomUUID());
   const [playerCards, setPlayerCards] = useState([]);
@@ -55,6 +56,7 @@ export default function BlackjackGame() {
       const data = await res.json();
       setTableId(data.tableId);
       socket.emit("join", { tableId: data.tableId, playerId, username });
+      setHasJoined(true);
     } catch (error) {
       console.error("Error creating table:", error);
     }
@@ -63,6 +65,9 @@ export default function BlackjackGame() {
   const joinTable = (incomingTableId) => {
     setTableId(incomingTableId);
     socket.emit("join", { tableId: incomingTableId, playerId, username });
+    setHasJoined(true);
+    console.log("Emitting join with username:", username);
+
   };
 
   const startGame = async () => {
@@ -109,22 +114,18 @@ export default function BlackjackGame() {
 
   return (
     <div className="game-wrapper">
-      <div className="blackjack-table">
-        <h1>Blackjack</h1>
-
-        {!tableId && (
-          <>
-            <button onClick={createTable}>Create Table</button>
-            <button onClick={() => joinTable(prompt("Enter Table ID"))}>Join Table</button>
-          </>
-        )}
-
-        {tableId && (
-          <>
+      {tableId ? (
+        <>
+          <div className="blackjack-table">
+            <h1>Blackjack</h1>
             <p><strong>Table ID:</strong> {tableId}</p>
-            <button className='copy-button' onClick={() => {
-              navigator.clipboard.writeText(tableId);}}
-              title="Copy Table ID">📋</button>
+            <button
+              className="copy-button"
+              onClick={() => navigator.clipboard.writeText(tableId)}
+              title="Copy Table ID"
+            >
+              📋
+            </button>
             <DealerHand cards={dealerCards} />
             <PlayerHand cards={playerCards} />
             <Controls
@@ -136,22 +137,31 @@ export default function BlackjackGame() {
               gameOver={gameOver}
               canDeal={true}
             />
-
             {gameOver && (
               <div className="game-over-message">
                 <strong>{renderResult()}</strong>
               </div>
             )}
-          </>
-        )}
-      </div>
+          </div>
 
-      <Chatbox
-        socket={socket}
-        tableId={tableId}
-        playerId={playerId}
-        username={username}
-      />
+          {hasJoined && (
+            <Chatbox
+              socket={socket}
+              tableId={tableId}
+              playerId={playerId}
+              username={username || "Player"}
+            />
+          )}
+        </>
+      ) : (
+        <>
+          <h1>Blackjack</h1>
+          <button onClick={createTable}>Create Table</button>
+          <button onClick={() => joinTable(prompt("Enter Table ID"))}>
+            Join Table
+          </button>
+        </>
+      )}
     </div>
   );
 }

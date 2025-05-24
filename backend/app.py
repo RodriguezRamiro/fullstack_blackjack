@@ -123,7 +123,11 @@ def handle_join(data):
     username = data.get("username")
 
     if not all([table_id, player_id, username]):
+        print("Join failed: missing data", data)
         return
+
+    print(f"{username} joined room {table_id}")
+    print("Received join data:", data)
 
     if table_id not in rooms:
         return
@@ -136,6 +140,7 @@ def handle_join(data):
             "score": 0,
             "status": "waiting"
         }
+
     join_room(table_id)
 
     emit("game_state", {
@@ -144,6 +149,7 @@ def handle_join(data):
         "deckCount": len(room["deck"]),
         "game_over": room["game_over"]
     }, room=table_id)
+
 
 @socketio.on("hit")
 def handle_hit(data):
@@ -223,11 +229,15 @@ def handle_chat_message(data):
 
     # Find username if player exists
     if table_id in rooms and player_id in rooms[table_id]["players"]:
-        username = rooms[table_id]["players"][player_id]["username"]
+        username = rooms[table_id]["players"][player_id]["username"] if (
+            table_id in rooms and player_id in rooms[table_id]["players"]
+        ) else data.get("username", "Anonymus")
 
     if not table_id or not player_id or not message:
         return # ignore bad requests
 
+    print("resolved username:", username)
+    print("players in room:", rooms[table_id]["players"])
     emit("chat_message", {
         "playerId": player_id,
         "username": username,
