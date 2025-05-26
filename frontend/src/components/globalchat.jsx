@@ -32,6 +32,7 @@ function GlobalChat({ username }) {
     socket.emit("chat_message", {
       username,
       message: trimmed,
+      isglobal: true,
     });
 
     setMessage("");
