@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, session
-from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
 from flask_cors import CORS
 import random
 import uuid
@@ -10,7 +10,9 @@ app.secret_key = "Super-secret_key"
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", async_mode="eventlet")
 
-rooms = {}
+game_rooms = {}
+
+
 
 
 def create_deck():
@@ -59,9 +61,9 @@ def calculate_score(hand):
 @app.route("/create-room", methods=["POST"])
 def create_room():
     table_id = str(uuid.uuid4())
-    if table_id in rooms:
+    if table_id in game_rooms:  # You had "rooms" which is the socketio helper, changed to game_rooms (your dict)
         return jsonify({"error": "Room already exists"}), 400
-    rooms[table_id] = {
+    game_rooms[table_id] = {
         "players": {},
         "dealer": {"hand": [], "score": 0},
         "deck": create_deck(),
@@ -79,10 +81,10 @@ def start_game():
     if not table_id or not player_id:
         return jsonify({"error": "Missing tableId or playerId."}), 404
 
-    if table_id not in rooms:
+    if table_id not in game_rooms:
         return jsonify({"error": "Room does not exist."}), 400
 
-    room = rooms[table_id]
+    room = game_rooms[table_id]
 
     if player_id not in room["players"]:
         return jsonify({"error": "Player not found in room."}), 400
@@ -127,12 +129,12 @@ def handle_join(data):
         return
 
     print(f"{username} joined room {table_id}")
-    print("Received join data:", data)
 
-    if table_id not in rooms:
+    if table_id not in game_rooms:
+        print("Room does not exist:", table_id)
         return
 
-    room = rooms[table_id]
+    room = game_rooms[table_id]
     if player_id not in room["players"]:
         room["players"][player_id] = {
             "username": username,
@@ -142,6 +144,14 @@ def handle_join(data):
         }
 
     join_room(table_id)
+
+    current_rooms = rooms(request.sid)  # this returns a set of rooms user is in
+    for r in current_rooms:
+        if r != request.sid and r != table_id:
+            leave_room(r)
+            print(f"Left room: {r}")
+
+    emit("joined_room", {"tableId": table_id}, to=request.sid)
 
     emit("game_state", {
         "players": room["players"],
@@ -156,10 +166,11 @@ def handle_hit(data):
     table_id = data.get("tableId")
     player_id = data.get("playerId")
 
-    if table_id not in rooms or player_id not in rooms[table_id]["players"]:
+    if table_id not in game_rooms or player_id not in game_rooms[table_id]["players"]:  # ✅
         return
 
-    room = rooms[table_id]
+    room = game_rooms[table_id]
+
     card = room["deck"].pop()
     player = room["players"][player_id]
     player["hand"].append(card)
@@ -180,10 +191,10 @@ def handle_stay(data):
     table_id = data.get("tableId")
     player_id = data.get("playerId")
 
-    if table_id not in rooms or player_id not in rooms[table_id]["players"]:
+    if table_id not in game_rooms or player_id not in game_rooms[table_id]["players"]:  # ✅
         return
 
-    room = rooms[table_id]
+    room = game_rooms[table_id]
     room["players"][player_id]["status"] = "stay"
 
     # Check if all players are done
@@ -221,28 +232,40 @@ def handle_disconnect():
 
 @socketio.on("chat_message")
 def handle_chat_message(data):
-    print("Chat recieved:", data) # <-- debug
+    print("Chat received:", data)  # debug
     table_id = data.get("tableId")
     player_id = data.get("playerId")
     message = data.get("message")
-    username = None
+    username = data.get("username", "Anonymous")
 
-    # Find username if player exists
-    if table_id in rooms and player_id in rooms[table_id]["players"]:
-        username = rooms[table_id]["players"][player_id]["username"] if (
-            table_id in rooms and player_id in rooms[table_id]["players"]
-        ) else data.get("username", "Anonymus")
 
-    if not table_id or not player_id or not message:
-        return # ignore bad requests
+    # Skip empty messages
+    if not message:
+        return
 
-    print("resolved username:", username)
-    print("players in room:", rooms[table_id]["players"])
-    emit("chat_message", {
+    is_global = True
+
+    # If table_id exists and player is in the room, update username & is_global
+    if table_id and table_id in game_rooms and player_id in game_rooms[table_id]["players"]:
+        username = game_rooms[table_id]["players"][player_id]["username"]
+        is_global = False
+
+    chat_data = {
         "playerId": player_id,
         "username": username,
-        "message": message
-    }, room= table_id)
+        "message": message,
+        "isglobal": is_global,  # all lowercase to match React check OR
+        "isGlobal": is_global,
+    }
+
+    if table_id:
+        # Room chat: emit only to that room
+        print(f"Sending chat to room: {table_id}")
+        emit("chat_message", chat_data, room=table_id)
+    else:
+        # Lobby/global chat: broadcast to all connected clients
+        print("Sending global chat message")
+        emit("chat_message", chat_data, broadcast=True)
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5001, debug=True)

@@ -7,17 +7,17 @@ import DealerHand from './dealerhand';
 import PlayerHand from './playerhand';
 import Controls from './controls';
 import '../styles/blackjackgame.css';
-import Chatbox from './chatbox';
+import RoomChat from './roomchat';
 
-export default function BlackjackGame() {
+export default function BlackjackGame({ playerId, username, onJoinRoom }) {
   const [hasJoined, setHasJoined] = useState(false);
   const [tableId, setTableId] = useState(null);
-  const [playerId, setPlayerId] = useState(() => crypto.randomUUID());
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
   const [playerTurn, setPlayerTurn] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [username] = useState("Player");
+
+
 
   useEffect(() => {
     socket.on("connect", () => {
@@ -32,16 +32,35 @@ export default function BlackjackGame() {
       setGameOver(state.game_over);
     });
 
-    socket.on("player_id", (id) => {
-      setPlayerId(id);
-    });
 
     return () => {
       socket.off("connect");
       socket.off("game_state");
-      socket.off("player_id");
     };
   }, []);
+
+  useEffect(() => {
+    socket.on("joined_room", ({ tableId }) => {
+      const playerId = localStorage.getItem("playerId");
+      const message = "Hello from Player!";
+
+      //RoomChat (with room)
+      socket.emit("chat_message", {
+        tableId,
+        playerId,
+        message,
+        username,
+      });
+
+
+      console.log(`Successfully joined room: ${tableId}`);
+    });
+
+    return () => {
+      socket.off("joined_room"); // Clean up
+    };
+  }, []);
+
 
   const createTable = async () => {
     try {
@@ -57,6 +76,7 @@ export default function BlackjackGame() {
       setTableId(data.tableId);
       socket.emit("join", { tableId: data.tableId, playerId, username });
       setHasJoined(true);
+      onJoinRoom?.(data.tableId);
     } catch (error) {
       console.error("Error creating table:", error);
     }
@@ -66,12 +86,19 @@ export default function BlackjackGame() {
     setTableId(incomingTableId);
     socket.emit("join", { tableId: incomingTableId, playerId, username });
     setHasJoined(true);
+    onJoinRoom?.(incomingTableId);
     console.log("Emitting join with username:", username);
 
   };
 
+  const handleJoinRoom = (joinedTableId) => {
+    setTableId(joinedTableId);
+    onJoinRoom?.(joinedTableId);
+  };
+
+
   const startGame = async () => {
-    console.log('Attempting to start game with:');
+  console.log('Attempting to start game with:');
   console.log('tableId:', tableId);
   console.log('playerId:', playerId);
 
@@ -143,15 +170,6 @@ export default function BlackjackGame() {
               </div>
             )}
           </div>
-
-          {hasJoined && (
-            <Chatbox
-              socket={socket}
-              tableId={tableId}
-              playerId={playerId}
-              username={username || "Player"}
-            />
-          )}
         </>
       ) : (
         <>
