@@ -13,6 +13,7 @@ export default function BlackjackGame({ playerId, username, tableId }) {
   const [dealerCards, setDealerCards] = useState([]);
   const [playerTurn, setPlayerTurn] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [gameState, setGameState] = useState(null);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -33,16 +34,25 @@ export default function BlackjackGame({ playerId, username, tableId }) {
     };
   }, [playerId]);
 
+  // Emit "join" evemt on mount or when ids change
+  useEffect(() => {
+    if (!tableId || !playerId || !username) return;
+
+    socket.emit("join", { tableId, playerId, username });
+    console.log(`Emitted join for player ${username} to room ${tableId}`);
+  }, [tableId, playerId, username]);
+
+
   useEffect(() => {
     if (!tableId) return;
 
     socket.on('joined_room', ({ tableId }) => {
-      const playerId = localStorage.getItem('playerId');
+      const storedPlayerId = localStorage.getItem('playerId') || playerId;
       const message = 'Hello from Player!';
 
       socket.emit('chat_message', {
         tableId,
-        playerId,
+        playerId : storedPlayerId,
         message,
         username,
       });
@@ -53,7 +63,7 @@ export default function BlackjackGame({ playerId, username, tableId }) {
     return () => {
       socket.off('joined_room');
     };
-  }, [tableId, username]);
+  }, [tableId, username, playerId]);
 
   const startGame = async () => {
     if (!tableId || !playerId) {
@@ -62,7 +72,7 @@ export default function BlackjackGame({ playerId, username, tableId }) {
     }
 
     try {
-      const response = await fetch('http://localhost:5001/start-game', {
+      const response = await fetch(`https://fullstack-blackjack.onrender.com/start-game`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tableId, playerId }),
@@ -84,7 +94,21 @@ export default function BlackjackGame({ playerId, username, tableId }) {
     socket.emit('stay', { tableId, playerId });
   };
 
-  const renderResult = () => gameOver ? 'Game over. Check results!' : null;
+  const renderResult = () => {
+    if (!gameOver) return null;
+
+    if (!gameState || !gameState.players) return "Game over. Check results!";
+
+    const player = gameState.players[playerId];
+    if (!player || !player.result) return "Game over. Check results!";
+
+    switch (player.result) {
+      case "win": return "You won! 🎉";
+      case "lose": return "You lost. 😞";
+      case "push": return "Push (tie). 🤝";
+      default: return "Game over Check results!";
+    }
+  };
 
   return (
     <div className="game-wrapper">

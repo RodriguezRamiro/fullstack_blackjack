@@ -7,8 +7,14 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = "Super-secret_key"
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
-socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000", async_mode="eventlet")
+
+allowed_origins = [
+    "http://localhost:3000",
+    "https://fullstack-blackjack.vercel.app/"
+]
+
+CORS(app, supports_credentials=True, origins=allowed_origins)
+socketio = SocketIO(app, cors_allowed_origins=allowed_origins, async_mode="eventlet")
 
 game_rooms = {}
 
