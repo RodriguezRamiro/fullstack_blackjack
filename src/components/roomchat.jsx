@@ -1,0 +1,99 @@
+import React, { useEffect, useState, useRef } from 'react';
+import '../styles/blackjackgame.css';
+
+const RoomChat = ({ socket, tableId, playerId, username }) => {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (!socket) {
+      console.log("Socket is undefined in Chatbox");
+      return;
+    }
+
+    const handleMessage = (data) => {
+      if (data.isglobal) return; // Skip global messages
+      if (tableId && data.tableId !== tableId) return;
+      if (!tableId && data.tableId) return;
+      setMessages((prev) => [...prev, data]);
+    };
+
+    socket.on("chat_message", handleMessage);
+    return () => socket.off("chat_message", handleMessage);
+  }, [socket, tableId]);
+
+  const sendMessage = () => {
+    console.log("sendMessage called with:", { tableId, playerId, username, input });
+
+    if (!input.trim() || !socket) {
+      console.log("Socket or input is missing.");
+      return;
+    }
+
+    if (!tableId || !playerId || !username) {
+      console.warn("Missing required chat info", { tableId, playerId, username });
+      return;
+    }
+
+    socket.emit("chat_message", {
+      tableId,
+      playerId,
+      username,
+      message: input.trim(),
+    });
+
+    setInput('');
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') sendMessage();
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  return (
+    <div className="chatbox-container">
+      <div className="chat-messages">
+        {messages.map((msg, idx) => {
+          const isSelf = msg.username === username;
+          return (
+            <div key={idx} className={`chat-message room ${isSelf ? 'self' : ''}`}>
+              <span className="chat-username">{isSelf ? 'You' : msg.username}</span>
+              {msg.message}
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+      <form
+        className="chat-input-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          sendMessage();
+        }}
+      >
+        <input
+          type="text"
+          className="chat-input"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyPress}
+          placeholder="Type a message..."
+          disabled={!tableId}
+        />
+        <button
+          type="submit"
+          className="chat-send-btn"
+          disabled={!input.trim() || !tableId}
+        >
+          Send
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default RoomChat;
