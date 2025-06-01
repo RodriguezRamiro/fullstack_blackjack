@@ -1,12 +1,13 @@
 // socket.js
-import { io } from 'socket.io-client';
 
-const BACKEND_URL = "https://fullstack-blackjack.onrender.com";
+
+import { io } from 'socket.io-client';
+import { BACKEND_URL } from './config';
 
 const socket = io(BACKEND_URL, {
-    withCredentials: true,
-    autoConnect: true,
-    transports: ['websocket'],  // optional but can improve reliability
+  withCredentials: true,
+  autoConnect: true,
+  transports: ['websocket'],
 });
 
 export default socket;

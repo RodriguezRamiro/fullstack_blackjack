@@ -1,16 +1,22 @@
 from flask import Flask, request, jsonify, session
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
+import eventlet
+import eventlet.wsgi
+import os
 from flask_cors import CORS
 import random
 import uuid
 import requests
 
+port = int(os.environ.get("PORT", 5001))
+
 app = Flask(__name__)
 app.secret_key = "Super-secret_key"
 
 allowed_origins = [
+    "http://localhost:5173",
     "http://localhost:3000",
-    "https://fullstack-blackjack.vercel.app/"
+    "https://fullstack-blackjack.vercel.app"
 ]
 
 CORS(app, supports_credentials=True, origins=allowed_origins)
@@ -274,4 +280,4 @@ def handle_chat_message(data):
         emit("chat_message", chat_data, broadcast=True)
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5001, debug=True)
+    socketio.run(app, host="0.0.0.0", port=port)

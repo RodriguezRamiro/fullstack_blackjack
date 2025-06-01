@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { BACKEND_URL } from '../config';
 import socket from '../socket';
 import DealerHand from './dealerhand';
 import PlayerHand from './playerhand';
@@ -22,6 +23,14 @@ export default function BlackjackGame({ playerId, username }) {
       console.log('Connected to backend via Socket.IO');
     });
 
+    socket.on('connect_error', (err) => {
+      console.error('Socket connection error:', err);
+    });
+
+    socket.on('disconnect', () => {
+      console.warn('Socket disconnected');
+    });
+
     socket.on('game_state', (state) => {
       setGameState(state);
       const player = state.players[playerId];
@@ -33,6 +42,8 @@ export default function BlackjackGame({ playerId, username }) {
 
     return () => {
       socket.off('connect');
+      socket.off('connect_error');
+      socket.off('disconnect');
       socket.off('game_state');
     };
   }, [playerId]);
@@ -75,12 +86,16 @@ export default function BlackjackGame({ playerId, username }) {
     }
 
     try {
-      const response = await fetch(`https://fullstack-blackjack.onrender.com/start-game`, {
+      const response = await fetch(`${BACKEND_URL}/start-game`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tableId, playerId }),
         credentials: 'include',
       });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      }
 
       const data = await response.json();
       console.log('Game started at table:', data.tableId);

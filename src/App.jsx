@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
 import './App.css';
 import socket from './socket';
+import { BACKEND_URL } from './config';
 import BlackjackGame from './components/blackjack';
 import GlobalChat from './components/globalchat';
 
@@ -12,11 +13,15 @@ function Lobby({ playerId, username }) {
 
   const createTable = async () => {
     try {
-      const res = await fetch("/create-room", {
+      const res = await fetch(`${BACKEND_URL}/create-room`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status} ${res.statusText}`);
+      }
 
       const data = await res.json();
       navigate(`/table/${data.tableId}`);
