@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { BACKEND_URL } from '../config';
 import socket from '../socket';
 import DealerHand from './dealerhand';
@@ -10,6 +11,7 @@ import Controls from './controls';
 import '../styles/blackjackgame.css';
 import RoomChat from './roomchat';
 
+
 export default function BlackjackGame({ playerId, username }) {
   const { tableId } = useParams();
   const [playerCards, setPlayerCards] = useState([]);
@@ -17,6 +19,8 @@ export default function BlackjackGame({ playerId, username }) {
   const [playerTurn, setPlayerTurn] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState(null);
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -31,12 +35,17 @@ export default function BlackjackGame({ playerId, username }) {
       console.warn('Socket disconnected');
     });
 
+    socket.on('room_not_found', () => {
+      alert("Room does not exist.");
+      navigate("/");
+    });
+
     socket.on('game_state', (state) => {
       setGameState(state);
-      const player = state.players[playerId];
+      const player = state?.players?.[playerId];
       setPlayerCards(player ? player.hand : []);
-      setDealerCards(state.dealer.hand);
-      setPlayerTurn(player ? player.status === 'playing' : false);
+      setDealerCards(state.dealer?.hand || []);
+      setPlayerTurn(player?.status === 'playing');
       setGameOver(state.game_over);
     });
 
@@ -111,6 +120,12 @@ export default function BlackjackGame({ playerId, username }) {
   const stay = () => {
     socket.emit('stay', { tableId, playerId });
   };
+
+  const leaveTable = () => {
+    socket.emit("leave", { tableId, playerId });
+    navigate("/");
+  };
+
 
   const renderResult = () => {
     if (!gameOver) return null;

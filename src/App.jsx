@@ -1,12 +1,18 @@
-// App.js
-
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
+
 import './App.css';
 import socket from './socket';
 import { BACKEND_URL } from './config';
+import { useNavigate } from 'react-router-dom';
 import BlackjackGame from './components/blackjack';
 import GlobalChat from './components/globalchat';
+import Navbar from './components/navbar';
 
 function Lobby({ playerId, username }) {
   const navigate = useNavigate();
@@ -51,6 +57,40 @@ function Lobby({ playerId, username }) {
   );
 }
 
+// Hook to extract tableId from URL if present
+function useTableIdFromPath() {
+  const location = useLocation();
+  const match = location.pathname.match(/\/table\/([^/]+)/);
+  return match ? match[1] : null;
+}
+
+function AppRoutes({ playerId, username }) {
+  const tableId = useTableIdFromPath();
+
+  return (
+    <>
+      <Navbar
+        tableId={tableId}
+        playerId={playerId}
+        socket={socket}
+        username={username}
+      />
+      <main className="app-container">
+        <Routes>
+          <Route
+            path="/"
+            element={<Lobby playerId={playerId} username={username} />}
+          />
+          <Route
+            path="/table/:tableId"
+            element={<BlackjackGame playerId={playerId} username={username} />}
+          />
+        </Routes>
+      </main>
+    </>
+  );
+}
+
 function App() {
   const [username] = useState("Player");
   const [playerId] = useState(() => {
@@ -64,15 +104,7 @@ function App() {
 
   return (
     <Router>
-      <main className="app-container">
-        <Routes>
-          <Route path="/" element={<Lobby playerId={playerId} username={username} />} />
-          <Route
-            path="/table/:tableId"
-            element={<BlackjackGame playerId={playerId} username={username} />}
-          />
-        </Routes>
-      </main>
+      <AppRoutes playerId={playerId} username={username} />
     </Router>
   );
 }

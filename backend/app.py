@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, session
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
 import eventlet
+from datetime import datetime
 import eventlet.wsgi
 import os
 from flask_cors import CORS
@@ -73,8 +74,9 @@ def calculate_score(hand):
 @app.route("/create-room", methods=["POST"])
 def create_room():
     table_id = str(uuid.uuid4())
-    if table_id in game_rooms:  # You had "rooms" which is the socketio helper, changed to game_rooms (your dict)
+    if table_id in game_rooms:
         return jsonify({"error": "Room already exists"}), 400
+
     game_rooms[table_id] = {
         "players": {},
         "dealer": {"hand": [], "score": 0},
@@ -82,6 +84,7 @@ def create_room():
         "started": False,
         "game_over": False
     }
+
     return jsonify({"message": "Room created", "tableId": table_id})
 
 @app.route("/start-game", methods=["POST"])
@@ -105,19 +108,31 @@ def start_game():
         return jsonify({"message": "Game already in progress."}), 400
 
     #Reset the game state regardless of current game status
-    room["deck"] = create_deck()
-    random.shuffle(room["deck"])
+
+    room["started"] = True
     room["game_over"] = False
 
+    # Calculate number of cards needed: 2 per player + 1 for dealer
+    number_needed = len(room["players"]) * 2 + 1
+    if len(room["deck"]) < number_needed:
+        room["deck"] += create_deck()
+
     random.shuffle(room["deck"])
 
-    for pid, info in room["players"].items():
-        hand = [room["deck"].pop(), room["deck"].pop()]
-        info.update({"hand": hand, "score": calculate_score(hand), "status": "playing"})
 
+    # Deal 2 cards to each player
+    for pid in room["players"]:
+        hand = [room["deck"].pop(), room["deck"].pop()]
+        room["players"][pid].update({
+            "hand": hand,
+            "score": calculate_score(hand),
+            "status": "playing"
+        })
+
+    # Deal 1 card to dealer
     room["dealer"] = {
-    "hand": [room["deck"].pop()],
-    "score": 0
+        "hand": [room["deck"].pop()],
+        "score": 0
 }
     room["dealer"]["score"] = calculate_score(room["dealer"]["hand"])
 
@@ -144,7 +159,9 @@ def handle_join(data):
 
     if table_id not in game_rooms:
         print("Room does not exist:", table_id)
+        emit("room_not_found", {}, to=request.sid)
         return
+
 
     room = game_rooms[table_id]
     if player_id not in room["players"]:
@@ -237,14 +254,23 @@ def handle_stay(data):
         "game_over": room["game_over"]
     }, room=table_id)
 
+
+@socketio.on("leave")
+def handle_leave(data):
+    table_id = data.get("tableId")
+    player_id = data.get("playerId")
+    leave_room(table_id)
+    print(f"Player {player_id} left room {table_id}")
+
+
 @socketio.on("disconnect")
 def handle_disconnect():
-    print("Client disconnected.")
+    print(f"Client {request.sid} disconnected.")
 
 
 @socketio.on("chat_message")
 def handle_chat_message(data):
-    print("Chat received:", data)  # debug
+    print("[RoomChat] received message:", data)  # debug
     table_id = data.get("tableId")
     player_id = data.get("playerId")
     message = data.get("message")
@@ -267,7 +293,8 @@ def handle_chat_message(data):
         "username": username,
         "message": message,
         "isglobal": is_global,  # all lowercase to match React check OR
-        "isGlobal": is_global,
+        "tableId": table_id,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
     }
 
     if table_id:

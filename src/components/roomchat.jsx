@@ -13,8 +13,10 @@ const RoomChat = ({ socket, tableId, playerId, username }) => {
     }
 
     const handleMessage = (data) => {
+      console.log("[RoomChat] Received chat_message:", data);
       if (data.isglobal) return; // Skip global messages
       if (tableId && data.tableId !== tableId) return;
+      console.log("Local tableId:", tableId, "Message tableId:", data.tableId);
       if (!tableId && data.tableId) return;
       setMessages((prev) => [...prev, data]);
     };

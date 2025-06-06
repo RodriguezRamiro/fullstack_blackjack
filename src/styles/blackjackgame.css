@@ -10,6 +10,57 @@ body {
   flex-direction: column;
 }
 
+
+/* src/styles/navbar.css */
+
+.navbar {
+  position: fixed;       /* Fix it relative to the viewport */
+  top: 0;                /* Stick to top */
+  left: 0;
+  right: 0;
+  height: 60px;          /* Adjust height as needed */
+  background-color: #1c1c1c;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1.5rem;
+  z-index: 1000;         /* Make sure it’s above other content */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  color: #f9f9f9;
+  text-decoration: none;
+}
+
+.navbar-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.navbar-user,
+.navbar-table {
+  font-size: 0.95rem;
+  color: #ddd;
+}
+
+.navbar-button {
+  background-color: #f44336;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+}
+
+.navbar-button:hover {
+  background-color: #d32f2f;
+}
+
+
 /* Blackjack Table Styling */
 .blackjack-table {
   background: linear-gradient(135deg, #088383, #2E8B57, #228b84);
