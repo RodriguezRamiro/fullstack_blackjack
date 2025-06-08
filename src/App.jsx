@@ -4,15 +4,16 @@ import {
   Route,
   Routes,
   useLocation,
+  useNavigate
 } from 'react-router-dom';
 
 import './App.css';
 import socket from './socket';
 import { BACKEND_URL } from './config';
-import { useNavigate } from 'react-router-dom';
 import BlackjackGame from './components/blackjack';
 import GlobalChat from './components/globalchat';
 import Navbar from './components/navbar';
+import UsernamePrompt from './components/usernameprompt';
 
 function Lobby({ playerId, username }) {
   const navigate = useNavigate();
@@ -57,7 +58,6 @@ function Lobby({ playerId, username }) {
   );
 }
 
-// Hook to extract tableId from URL if present
 function useTableIdFromPath() {
   const location = useLocation();
   const match = location.pathname.match(/\/table\/([^/]+)/);
@@ -92,7 +92,10 @@ function AppRoutes({ playerId, username }) {
 }
 
 function App() {
-  const [username] = useState("Player");
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem("username") || "";
+  });
+
   const [playerId] = useState(() => {
     let id = localStorage.getItem("playerId");
     if (!id) {
@@ -101,6 +104,13 @@ function App() {
     }
     return id;
   });
+
+  if (!username) {
+    return <UsernamePrompt onSetUsername={(name) => {
+      setUsername(name);
+      localStorage.setItem("username", name);
+    }} />;
+  }
 
   return (
     <Router>

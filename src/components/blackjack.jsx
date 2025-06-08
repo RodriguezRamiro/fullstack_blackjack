@@ -148,14 +148,8 @@ export default function BlackjackGame({ playerId, username }) {
       {tableId ? (
         <div className="blackjack-table">
           <h1>Blackjack</h1>
-          <p><strong>Table ID:</strong> {tableId}</p>
-          <button
-            className="copy-button"
-            onClick={() => navigator.clipboard.writeText(tableId)}
-            title="Copy Table ID"
-          >
-            📋
-          </button>
+          <p><strong>Table ID</strong>
+          </p>
 
           <DealerHand cards={dealerCards} />
           <PlayerHand cards={playerCards} />
