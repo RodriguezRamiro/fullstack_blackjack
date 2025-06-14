@@ -148,7 +148,9 @@ export default function BlackjackGame({ playerId, username }) {
       {tableId ? (
         <div className="blackjack-table">
           <h1>Blackjack</h1>
-          <p><strong>Table ID</strong>
+          <p><strong>Table ID:
+            "Placed Bets($)"---------------------------Raise Bets Button
+          </strong>
           </p>
 
           <DealerHand cards={dealerCards} />

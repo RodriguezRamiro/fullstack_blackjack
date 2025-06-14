@@ -145,6 +145,27 @@ def start_game():
 
     return jsonify({"message": "Game started.", "tableId": table_id})
 
+def get_private_game_state(room, player_id):
+    private_players = {}  
+
+    for pid, pdata in room["players"].items():
+        if pid == player_id:
+            private_players[pid] = pdata  # full info
+        else:
+            private_players[pid] = {
+                "username": pdata["username"],
+                "hand": ["Hidden"] * len(pdata["hand"]),
+                "score": None,
+                "status": pdata["status"]
+            }
+
+    return {
+        "players": private_players,
+        "dealer": room["dealer"],
+        "deckCount": len(room["deck"]),
+        "game_over": room["game_over"]
+    }
+
 @socketio.on("join")
 def handle_join(data):
     table_id = data.get("tableId")

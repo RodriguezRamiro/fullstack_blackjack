@@ -61,9 +61,12 @@ const RoomChat = ({ socket, tableId, playerId, username }) => {
       <div className="chat-messages">
         {messages.map((msg, idx) => {
           const isSelf = msg.username === username;
+          const isDealer = !msg.username || msg.username.toLowerCase() == 'dealer';
+          const displayName = isSelf ? 'You' : msg.username || Dealer;
+
           return (
-            <div key={idx} className={`chat-message room ${isSelf ? 'self' : ''}`}>
-              <span className="chat-username">{isSelf ? 'You' : msg.username}</span>
+            <div key={idx} className={`chat-message room ${isSelf ? 'self' : isDealer ? 'dealer' : 'other'}`}>
+              <span className="chat-username">{displayName}</span>
               {msg.message}
             </div>
           );
