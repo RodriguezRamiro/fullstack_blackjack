@@ -130,12 +130,12 @@ body {
   background: linear-gradient(135deg, #088383, #2E8B57, #228b84);
   background-size: 300% 300%;
   animation: gradient-rotate 9s linear infinite;
-  width: 100%;
+  width:  30vw;
   max-width: 1200px;
-  height: 800px;
+  height: 30vw;
   border-radius: 0 0 200px 200px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-  padding: 30px 20px 100px;
+  padding: 10px 20px 100px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -164,6 +164,20 @@ body {
 .copy-button:hover {
   background-color: #444;
 }
+
+.betting-controls {
+  margin: 10px 0;
+  text-align: center;
+}
+
+.betting-controls input {
+  padding: 4px;
+}
+
+.betting-controls button {
+  padding: 5px 10px;
+}
+
 
 /* Header Styles */
 h1 {
@@ -544,6 +558,47 @@ button:disabled {
 }
 
 /* Dealer & Player Areas */
+
+.player {
+  position: absolute;
+}
+
+
+.player.top { top: 0; left: 50%; transform: translateX(-50%); }
+.player.bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
+.player.left { left: 0; top: 50%; transform: translateY(-50%); }
+.player.right { right: 0; top: 50%; transform: translateY(-50%); }
+
+.player-seat {
+  text-align: center;
+}
+
+.player-seat.current-turn {
+  border: 2px solid yellow;
+  padding: 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 0, 0.2);
+}
+
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  background: #444;
+  color: white;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-bubble {
+  background: #eee;
+  padding: 4px 8px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
 .dealer-area,
 .player-area {
   display: flex;

@@ -1,8 +1,5 @@
-// blackjack.jsx
-
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../config';
 import socket from '../socket';
 import DealerHand from './dealerhand';
@@ -10,7 +7,6 @@ import PlayerHand from './playerhand';
 import Controls from './controls';
 import '../styles/blackjackgame.css';
 import RoomChat from './roomchat';
-
 
 export default function BlackjackGame({ playerId, username }) {
   const { tableId } = useParams();
@@ -20,7 +16,6 @@ export default function BlackjackGame({ playerId, username }) {
   const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState(null);
   const navigate = useNavigate();
-
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -54,39 +49,51 @@ export default function BlackjackGame({ playerId, username }) {
       socket.off('connect_error');
       socket.off('disconnect');
       socket.off('game_state');
+      socket.off('room_not_found');
     };
-  }, [playerId]);
+  }, [playerId, navigate]);
 
-  // Emit "join" evemt on mount or when ids change
+  // Join table and send greeting
   useEffect(() => {
     if (!tableId || !playerId || !username) return;
 
+    // Emit join
     socket.emit("join", { tableId, playerId, username });
     console.log(`Emitted join for player ${username} to room ${tableId}`);
+
+    // Send greeting chat message
+    socket.emit('chat_message', {
+      tableId,
+      playerId,
+      message: `Hello from ${username}!`,
+      username,
+    });
+
   }, [tableId, playerId, username]);
 
+  // Listen for joined_room confirmation (optional)
+  useEffect(() => {
+    const handleJoinedRoom = ({ tableId }) => {
+      console.log(`Successfully joined room: ${tableId}`);
+    };
+
+    socket.on('joined_room', handleJoinedRoom);
+
+    return () => {
+      socket.off('joined_room', handleJoinedRoom);
+    };
+  }, []);
 
   useEffect(() => {
-    if (!tableId) return;
-
-    socket.on('joined_room', ({ tableId }) => {
-      const storedPlayerId = localStorage.getItem('playerId') || playerId;
-      const message = 'Hello from Player!';
-
-      socket.emit('chat_message', {
-        tableId,
-        playerId : storedPlayerId,
-        message,
-        username,
-      });
-
-      console.log(`Successfully joined room: ${tableId}`);
+    socket.on('bet_placed', ({ playerId, bet}) =>{
+      console.log(`Player ${playerId} placed a bet of $${bet}`);
+      // Optional: update local state or show message
     });
 
     return () => {
-      socket.off('joined_room');
+      socket.off('bet_placed');
     };
-  }, [tableId, username, playerId]);
+  }, []);
 
   const startGame = async () => {
     if (!tableId || !playerId) {
@@ -126,12 +133,9 @@ export default function BlackjackGame({ playerId, username }) {
     navigate("/");
   };
 
-
   const renderResult = () => {
     if (!gameOver) return null;
-
     if (!gameState || !gameState.players) return "Game over. Check results!";
-
     const player = gameState.players[playerId];
     if (!player || !player.result) return "Game over. Check results!";
 
@@ -139,8 +143,21 @@ export default function BlackjackGame({ playerId, username }) {
       case "win": return "You won! 🎉";
       case "lose": return "You lost. 😞";
       case "push": return "Push (tie). 🤝";
-      default: return "Game over Check results!";
+      default: return "Game over. Check results!";
     }
+  };
+
+  const [betAmount, setBetAmount] = useState(10); // default starting bet
+
+  const placeBet = () => {
+    if (!tableId || !playerId || betAmount < 1) {
+      console.error("Invalid bet or missing table/player ID");
+      return;
+    }
+
+    socket.emit("place_bet", { tableId, playerId, bet: betAmount }, (ack) => {
+      console.log("Bet acknowledged by server:", ack);
+    });
   };
 
   return (
@@ -148,10 +165,25 @@ export default function BlackjackGame({ playerId, username }) {
       {tableId ? (
         <div className="blackjack-table">
           <h1>Blackjack</h1>
-          <p><strong>Table ID:
-            "Placed Bets($)"---------------------------Raise Bets Button
-          </strong>
-          </p>
+          <p><strong>Table ID: {tableId}</strong></p>
+
+            <div className="betting-controls">
+            <label htmlFor="betAmount">Place your bet ($): </label>
+            <input
+            id="betAmount"
+            type="number"
+            min="1"
+            value={betAmount}
+            onChange={(e) => setBetAmount(Number(e.target.value))}
+            style={{ width: "80px", marginRight: "10px" }}
+          />
+          <button onClick={placeBet} disabled={betAmount < 1}>
+            Raise Bet
+          </button>
+        </div>
+
+
+
 
           <DealerHand cards={dealerCards} />
           <PlayerHand cards={playerCards} />
@@ -174,13 +206,13 @@ export default function BlackjackGame({ playerId, username }) {
       ) : (
         <p style={{ textAlign: 'center' }}>Waiting to join a table...</p>
       )}
-      {/* Add ChatBox here */}
+
       <RoomChat
-  socket={socket}
-  tableId={tableId}
-  playerId={playerId}
-  username={username}
-/>
+        socket={socket}
+        tableId={tableId}
+        playerId={playerId}
+        username={username}
+      />
     </div>
   );
 }
