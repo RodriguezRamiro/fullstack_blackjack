@@ -1,10 +1,10 @@
-//src/components/UsernamePrompt.jsx
+//src/components/usernameprompt.jsx
 
 
 import React, { useState } from 'react';
 
 
-const UsernamePrompt = ({ onSetUsername }) => {
+const usernameprompt = ({ onSetUsername }) => {
     const [input, setInput] = useState("");
 
     const handleSubmit = () => {
@@ -32,4 +32,4 @@ const UsernamePrompt = ({ onSetUsername }) => {
     );
 };
 
-export default UsernamePrompt;
+export default usernameprompt;
