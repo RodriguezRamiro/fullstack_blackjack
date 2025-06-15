@@ -1,16 +1,14 @@
-//playerhan.jsx
-
 import React from 'react';
 import playerImage from '../assets/icons8-croupier-64 (1).png';
 
-export default function PlayerHand({ cards = [] }) {
+export default function PlayerHand({ cards = [], username = "Player" }) {
+
   const calculateHandValue = (cards) => {
     let total = 0;
     let aceCount = 0;
 
     cards.forEach((card) => {
       const value = card?.rank?.toUpperCase();
-
       if (!value) return;
 
       if (['K', 'Q', 'J'].includes(value)) {
@@ -31,20 +29,16 @@ export default function PlayerHand({ cards = [] }) {
     return total;
   };
 
-  // Debugging: Uncomment this to check card values
-  console.log("Player cards:", cards);
-
   return (
     <div className="player-area">
-      {/* Player Avatar */}
-      <div className="player-avatar">
+      <div className="player-avatar-name">
         <img
           src={playerImage}
-          alt="Player Avatar"
-          className="player-avatar"
+          alt={`${username}'s avatar`}
+          className="player-hand-avatar"
         />
+        <h2>{username}'s Hand</h2>
       </div>
-      <h2>Player's Hand</h2>
 
       <div className="card-row">
         {cards.length > 0 ? (

@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 
 
-const usernameprompt = ({ onSetUsername }) => {
+const UsernamePrompt = ({ onSetUsername }) => {
     const [input, setInput] = useState("");
 
     const handleSubmit = () => {
@@ -32,4 +32,4 @@ const usernameprompt = ({ onSetUsername }) => {
     );
 };
 
-export default usernameprompt;
+export default UsernamePrompt;

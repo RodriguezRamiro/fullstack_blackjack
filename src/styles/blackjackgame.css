@@ -578,7 +578,7 @@ button:disabled {
   border-radius: 50%;
   background: green; /* table background */
   margin: auto;
-  
+
 }
 
 .seat-wrapper {
@@ -732,6 +732,16 @@ button:disabled {
   transform-origin: bottom center;
   z-index: 3;
 }
+
+.player-hand-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--color-black);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  background-color: var(--color-black);
+}
+
 
 /* --- Gradient Background Animation --- */
 @keyframes gradient-rotate {
