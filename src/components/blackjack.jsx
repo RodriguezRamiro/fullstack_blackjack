@@ -7,6 +7,8 @@ import PlayerHand from './playerhand';
 import Controls from './controls';
 import '../styles/blackjackgame.css';
 import RoomChat from './roomchat';
+import PlayerSeat from './playerseat';
+import TableSeats from './tableseats';
 
 export default function BlackjackGame({ playerId, username }) {
   const { tableId } = useParams();
@@ -16,6 +18,20 @@ export default function BlackjackGame({ playerId, username }) {
   const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState(null);
   const navigate = useNavigate();
+
+
+
+  const players = [
+    { playerId: '1', username: 'Alice', hand: [], chatBubble: 'Hi' },
+    { playerId: '2', username: 'Bob', hand: [], chatBubble: null },
+    { playerId: '3', username: 'Carol', hand: [], chatBubble: 'GL!' },
+    { playerId: '4', username: 'Dave', hand: [], chatBubble: 'Let’s go!' }
+  ];
+
+
+
+
+
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -129,9 +145,12 @@ export default function BlackjackGame({ playerId, username }) {
   };
 
   const leaveTable = () => {
-    socket.emit("leave", { tableId, playerId });
-    navigate("/");
+    if (window.confirm('Are you sure you want to leave the table?')) {
+      socket.emit("leave", { tableId, playerId });
+      navigate("/");
+    }
   };
+
 
   const renderResult = () => {
     if (!gameOver) return null;
@@ -155,64 +174,70 @@ export default function BlackjackGame({ playerId, username }) {
       return;
     }
 
+
     socket.emit("place_bet", { tableId, playerId, bet: betAmount }, (ack) => {
       console.log("Bet acknowledged by server:", ack);
     });
   };
 
   return (
+    
     <div className="game-wrapper">
       {tableId ? (
-        <div className="blackjack-table">
-          <h1>Blackjack</h1>
-          <p><strong>Table ID: {tableId}</strong></p>
-
+        <div className="table-seats-layout">
+          <div className="blackjack-table">
+            <h1>Blackjack</h1>
             <div className="betting-controls">
-            <label htmlFor="betAmount">Place your bet ($): </label>
-            <input
-            id="betAmount"
-            type="number"
-            min="1"
-            value={betAmount}
-            onChange={(e) => setBetAmount(Number(e.target.value))}
-            style={{ width: "80px", marginRight: "10px" }}
-          />
-          <button onClick={placeBet} disabled={betAmount < 1}>
-            Raise Bet
-          </button>
-        </div>
-
-
-
-
-          <DealerHand cards={dealerCards} />
-          <PlayerHand cards={playerCards} />
-          <Controls
-            onDeal={startGame}
-            onHit={hit}
-            onStay={stay}
-            onReset={() => window.location.reload()}
-            disabled={!playerTurn}
-            gameOver={gameOver}
-            canDeal={true}
-          />
-
-          {gameOver && (
-            <div className="game-over-message">
-              <strong>{renderResult()}</strong>
+              <label htmlFor="betAmount">Tables Bet ($): </label>
+              <input
+                id="betAmount"
+                type="number"
+                min="1"
+                value={betAmount}
+                onChange={(e) => setBetAmount(Number(e.target.value))}
+                style={{ width: "80px", marginRight: "120px" }}
+                disabled={playerTurn || gameOver}
+              />
+              <button onClick={placeBet} disabled={betAmount < 1 || playerTurn || gameOver}>
+                Raise Bet
+              </button>
             </div>
-          )}
+            <TableSeats
+            players={gameState?.players ? Object.values(gameState.players) : []}
+            currentPlayerId={playerId}
+            onSendMessage={(msg) => {
+              socket.emit('chat_message', {
+                tableId,
+                playerId,
+                username,
+                message: msg,
+              });
+            }}
+          />
+
+            <DealerHand cards={dealerCards} />
+            <PlayerHand cards={playerCards} />
+
+            <Controls
+              onDeal={startGame}
+              onHit={hit}
+              onStay={stay}
+              onReset={() => window.location.reload()}
+              disabled={!playerTurn}
+              gameOver={gameOver}
+              canDeal={true}
+            />
+
+            {gameOver && (
+              <div className="game-over-message">
+                <strong>{renderResult()}</strong>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <p style={{ textAlign: 'center' }}>Waiting to join a table...</p>
       )}
-
-      <RoomChat
-        socket={socket}
-        tableId={tableId}
-        playerId={playerId}
-        username={username}
-      />
     </div>
   );
 }

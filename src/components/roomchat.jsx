@@ -1,6 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import '../styles/blackjackgame.css';
 
+
+// Simple avatar function, replace or extend as needed
+const getAvatarUrl = (username) => {
+  if (!username) return '/avatars/default.png'; // fallback avatar URL
+  // Use ui-avatars for quick placeholder avatars:
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random&color=fff`;
+};
+
+
 const RoomChat = ({ socket, tableId, playerId, username }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -62,17 +71,33 @@ const RoomChat = ({ socket, tableId, playerId, username }) => {
         {messages.map((msg, idx) => {
           const isSelf = msg.username === username;
           const isDealer = !msg.username || msg.username.toLowerCase() == 'dealer';
-          const displayName = isSelf ? 'You' : msg.username || Dealer;
+          const displayName = isSelf ? 'You' : msg.username || 'Dealer';
+
+          //For avatar
+          const avatarUrl = getAvatarUrl(msg.username);
 
           return (
-            <div key={idx} className={`chat-message room ${isSelf ? 'self' : isDealer ? 'dealer' : 'other'}`}>
-              <span className="chat-username">{displayName}</span>
-              {msg.message}
+            <div
+        key={idx}
+        className={`chat-message room ${isSelf ? 'self' : isDealer ? 'dealer' : 'other'}`}
+        style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <img
+          src={avatarUrl}
+          alt={`${displayName} avatar`}
+          className="chat-avatar"
+          style={{ width: 40, height: 40, borderRadius: '50%', marginRight: 8 }}
+        />
+        <div className={`chat-bubble ${isSelf ? 'bubble-self' : 'bubble-other'}`}>
+          <div className="chat-username" style={{ fontWeight: 'bold', marginBottom: 4 }}>
+            {displayName}
             </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
+          <div>{msg.message}</div>
+        </div>
       </div>
+    );
+  })}
+  <div ref={messagesEndRef} />
+</div>
       <form
         className="chat-input-form"
         onSubmit={(e) => {

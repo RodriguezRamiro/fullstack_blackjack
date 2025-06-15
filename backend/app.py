@@ -1,8 +1,7 @@
-eventlet.monkey_patch()
+
 
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
-import eventlet
 from datetime import datetime
 import os
 from flask_cors import CORS
@@ -23,7 +22,7 @@ allowed_origins = [
 ]
 
 CORS(app, supports_credentials=True, origins=allowed_origins)
-socketio = SocketIO(app, cors_allowed_origins=allowed_origins, async_mode="eventlet")
+socketio = SocketIO(app, cors_allowed_origins=allowed_origins, async_mode="threading")
 
 game_rooms = {}
 
@@ -409,13 +408,18 @@ def emit_game_state(room, table_id, sid=None):
 
 @socketio.on("disconnect")
 def handle_disconnect():
+    sid = request.sid
     print(f"Client {request.sid} disconnected.")
 
     tables_to_delete = []
     for table_id, room in list(game_rooms.items()):
+        to_remove = []
         for player_id, player in list(room["players"].items()):
-            if player.get("sid") == request.sid:
-                del room["players"][player_id]
+            if player.get("sid") == sid:
+                to_remove.append(player_id)
+        for pid in to_remove:
+                leave_room(table_id, sid=sid)
+                del room["players"][pid]
         if not room["players"]:
             tables_to_delete.append(table_id)
 
@@ -460,4 +464,6 @@ def handle_chat_message(data):
         emit("chat_message", chat_data, broadcast=True)
 
 if __name__ == "__main__":
+    print("Before socketio.run")
     socketio.run(app, host="0.0.0.0", port=port)
+    print("After socketio.run (should never reach here)")

@@ -1,23 +1,80 @@
-/* General Pages Styles */
+/* --- CSS Variables (Custom Properties) --- */
+/* Centralizing colors and common values for easier management */
+:root {
+  /* Brand & Core Colors */
+  --color-primary-green: #588958;
+  --color-dark-background: #1c1c1c;
+  --color-gold-accent: #ffd700;
+  --color-red-error: #dc3545;
+  --color-green-success: #28a745;
+  --color-light-text: #f9f9f9;
+  --color-medium-text: #ddd;
+  --color-dark-text: #333;
+  --color-black: #000;
+  --color-white: #fff;
+  --color-gray-dark: #222;
+  --color-gray-medium: #444;
+  --color-gray-light: #eee;
+
+  /* Gradient Colors */
+  --gradient-green-teal-start: #088383;
+  --gradient-green-teal-mid: #2E8B57;
+  --gradient-green-teal-end: #228b84;
+  --gradient-header-start: #ebeb1c;
+  --gradient-header-mid: #ff4b2b;
+  --gradient-header-end: #0dcd10;
+
+  /* Chat Specific Colors */
+  --chat-bg: rgba(0, 0, 0, 0.9);
+  --chat-border: #a67c52;
+  --chat-message-default-bg: rgba(255, 255, 255, 0.1);
+  --chat-message-self-bg: rgba(11, 143, 143, 0.9);
+  --chat-message-self-text: #e0f7f7;
+  --chat-message-global-bg: rgba(0, 123, 255, 0.2);
+  --chat-message-global-text: #cce5ff;
+  --chat-message-room-bg: rgba(255, 248, 220, 0.6);
+  --chat-message-room-text: #3b2f22;
+  --chat-message-room-border: #d2b48c;
+  --chat-message-dealer-bg: var(--color-gray-medium);
+  --chat-message-dealer-text: var(--color-gold-accent);
+
+  /* Spacing & Sizing */
+  --navbar-height: 60px;
+  --border-radius-small: 4px;
+  --border-radius-medium: 6px;
+  --border-radius-large: 8px;
+  --border-radius-pill: 20px;
+  --box-shadow-light: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --box-shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --box-shadow-heavy: 0 0 30px rgba(0, 0, 0, 0.5);
+
+  /* Animation */
+  --animation-speed-fast: 0.2s;
+  --animation-speed-normal: 0.3s;
+  --animation-speed-slow: 0.5s;
+  --animation-gradient-duration: 9s;
+}
+
+/* --- General Page Styles --- */
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #588958;
+  background: var(--color-primary-green);
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: 100vh;
+  min-height: 100vh; /* Use min-height for flexibility */
   flex-direction: column;
 }
 
-/* modalStyles */
+/* --- Modal Styles --- */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0,0,0,0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -25,12 +82,12 @@ body {
 }
 
 .modal-content {
-  background-color: #fff;
+  background-color: var(--color-white);
   padding: 2rem 3rem;
-  border-radius: 8px;
+  border-radius: var(--border-radius-large);
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  box-shadow: var(--box-shadow-medium);
   text-align: center;
 }
 
@@ -44,52 +101,49 @@ body {
   padding: 0.5rem 1.5rem;
   font-size: 1rem;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   border: none;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--animation-speed-normal) ease;
 }
 
 .modal-confirm {
-  background-color: #28a745;
-  color: white;
+  background-color: var(--color-green-success);
+  color: var(--color-white);
 }
 
 .modal-confirm:hover {
-  background-color: #218838;
+  background-color: #218838; /* A slightly darker green */
 }
 
 .modal-cancel {
-  background-color: #dc3545;
-  color: white;
+  background-color: var(--color-red-error);
+  color: var(--color-white);
 }
 
 .modal-cancel:hover {
-  background-color: #c82333;
+  background-color: #c82333; /* A slightly darker red */
 }
 
-
-
-/* src/styles/navbar.css */
-
+/* --- Navbar Styles --- */
 .navbar {
-  position: fixed;       /* Fix it relative to the viewport */
-  top: 0;                /* Stick to top */
+  position: fixed;
+  top: 0;
   left: 0;
   right: 0;
-  height: 60px;          /* Adjust height as needed */
-  background-color: #1c1c1c;
-  color: #fff;
+  height: var(--navbar-height);
+  background-color: var(--color-dark-background);
+  color: var(--color-white);
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 1.5rem;
-  z-index: 1000;         /* Make sure it’s above other content */
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  z-index: 1000;
+  box-shadow: var(--box-shadow-light);
 }
 
 .navbar-logo {
   font-size: 1.5rem;
-  color: #f9f9f9;
+  color: var(--color-light-text);
   text-decoration: none;
 }
 
@@ -102,39 +156,37 @@ body {
 .navbar-user,
 .navbar-table {
   font-size: 0.95rem;
-  color: #ddd;
+  color: var(--color-medium-text);
 }
 
 .navbar-button {
-  background-color: #588958;
-  ;
+  background-color: var(--color-primary-green);
   border: none;
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  color: white;
+  border-radius: var(--border-radius-medium);
+  color: var(--color-white);
   cursor: pointer;
   margin-left: 12px;
-  padding: 6px 14px;
   font-size: 0.9rem;
-  border-radius: 6px;
   letter-spacing: 0.03em;
+  transition: background-color var(--animation-speed-normal) ease;
 }
 
 .navbar-button:hover {
-  background-color: #d32f2f;
+  background-color: #d32f2f; /* A specific red for hover */
 }
 
-
-/* Blackjack Table Styling */
+/* --- Blackjack Table Styling --- */
 .blackjack-table {
-  background: linear-gradient(135deg, #088383, #2E8B57, #228b84);
+  background: linear-gradient(135deg, var(--gradient-green-teal-start), var(--gradient-green-teal-mid), var(--gradient-green-teal-end));
   background-size: 300% 300%;
-  animation: gradient-rotate 9s linear infinite;
-  width:  30vw;
+  animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
+  width: 30vw;
   max-width: 1200px;
+  margin: auto;
   height: 30vw;
   border-radius: 0 0 200px 200px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--box-shadow-heavy);
   padding: 10px 20px 100px;
   display: flex;
   flex-direction: column;
@@ -151,18 +203,18 @@ body {
 }
 
 .copy-button {
-  background-color: #222;
-  color: #fff;
+  background-color: var(--color-gray-dark);
+  color: var(--color-white);
   border: none;
   padding: 0.1rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--border-radius-medium);
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--animation-speed-fast) ease;
 }
 
 .copy-button:hover {
-  background-color: #444;
+  background-color: var(--color-gray-medium);
 }
 
 .betting-controls {
@@ -178,35 +230,33 @@ body {
   padding: 5px 10px;
 }
 
-
-/* Header Styles */
+/* --- Header Styles --- */
 h1 {
-  color: black;
+  color: var(--color-black);
   margin: 0;
   text-align: center;
   position: relative;
   z-index: 10;
-  transition: color 0.9s ease;
-  background: linear-gradient(135deg, #ebeb1c, #ff4b2b, #0dcd10);
+  transition: color 0.9s ease; /* Specific transition for color */
+  background: linear-gradient(135deg, var(--gradient-header-start), var(--gradient-header-mid), var(--gradient-header-end));
   background-size: 300% 300%;
-  animation: gradient-rotate 9s linear infinite;
+  animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
   border: transparent;
   border-radius: 50%;
 }
 
-/* Chatbox Styles - Consolidated */
+/* --- Chatbox Styles --- */
 .chatbox-container {
   position: fixed;
   bottom: 0;
   right: 0;
   width: 100%;
-  max-width: 100%;
+  max-width: 100%; /* Adjust for desktop if chat shouldn't be full width */
   height: 220px;
-  margin: 0;
-  background-color: rgba(0, 0, 0, 0.9);
-  border-top: 3px solid #a67c52;
+  background-color: var(--chat-bg);
+  border-top: 3px solid var(--chat-border);
   font-family: 'Georgia', 'Garamond', serif;
-  color: #4b3e2a;
+  color: #4b3e2a; /* Specific color, consider variable if reused */
   display: flex;
   flex-direction: column;
   border-radius: 12px 12px 0 0;
@@ -222,107 +272,84 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  align-items: flex-start;
-  text-align: left;
   word-wrap: break-word;
   max-width: 100%;
   scroll-behavior: smooth;
-
-}
-
-.chat-messages {
-  align-items: left;
-  float: none, !important;
-  text-align: left;
-  flex: 1;
-  padding: 12px 16px;
-  overflow-y: auto;
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
   scrollbar-width: thin;
   scrollbar-color: #888 transparent;
-  color: white;
+  color: var(--color-white);
   font-size: 0.9rem;
-  scroll-behavior: smooth;
 }
 
-.chat-messages::-webkit-scrollbar {
+.chat-log::-webkit-scrollbar {
   width: 6px;
 }
 
-.chat-messages::-webkit-scrollbar-thumb {
+.chat-log::-webkit-scrollbar-thumb {
   background-color: #888;
   border-radius: 3px;
 }
 
 .chat-message {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--chat-message-default-bg);
   padding: 8px 12px;
   border-radius: 12px;
   max-width: 80%;
   word-wrap: break-word;
   line-height: 1.3;
-  font-size: 1.3rem;
-  float: left;
-  color: #ddd;
+  font-size: 1rem; /* Adjusted to be more consistent with chat-log font size */
+  color: var(--color-medium-text);
+  align-self: flex-start; /* Default alignment for messages not marked 'self' */
 }
 
 .chat-message.self {
-  background-color: rgba(11, 143, 143, 0.9);
-  align-self: flex-end;
-  color: #e0f7f7;
-  float: right;
+  background-color: var(--chat-message-self-bg);
+  color: var(--chat-message-self-text);
+  align-self: flex-end; /* Aligns to the right */
 }
 
 .chat-message.global {
-  background-color: rgba(0, 123, 255, 0.2);
-  color: #cce5ff;
-  float: left;
+  background-color: var(--chat-message-global-bg);
+  color: var(--chat-message-global-text);
+  align-self: flex-start; /* Example: global messages always from "others" */
 }
 
 .chat-message.room {
-  background-color: rgba(255, 248, 220, 0.6); /* soft parchment yellow */
-  color: #3b2f22;
+  background-color: var(--chat-message-room-bg);
+  color: var(--chat-message-room-text);
   font-family: 'MedievalSharp', cursive;
-  border: 1px solid #d2b48c;
+  border: 1px solid var(--chat-message-room-border);
   padding: 1px 10px;
-  border-radius: 8px;
-  max-width: 80%;
-  word-wrap: break-word;
+  border-radius: var(--border-radius-large);
   box-shadow: 2px 2px 5px rgba(120, 100, 70, 0.2);
 }
 
-
 .chat-message.room.other {
-  background-color: #333;
-  color:#fff;
+  background-color: var(--color-dark-text); /* Using a defined variable */
+  color: var(--color-white);
   align-self: flex-start;
 }
 
-
 .chat-message.room.self {
-color: #fff;
-align-self: flex-end;
+  color: var(--color-white);
+  align-self: flex-end;
 }
 
-.chat-message.room.dealer  {
-  background-color: #444;
-  color: #ffcc00;
+.chat-message.room.dealer {
+  background-color: var(--chat-message-dealer-bg);
+  color: var(--chat-message-dealer-text);
   text-align: center;
   font-style: italic;
-  width: 100%;
-  justify-content: center;
+  width: 100%; /* Dealer messages span full width */
+  align-self: center; /* Centers the block itself */
 }
-
 
 .chat-username {
   font-weight: bold;
   margin-right: 6px;
-  font-size: 1rem;
+  font-size: 0.9rem; /* Adjusted for consistency */
   opacity: 0.8;
-  color: #ccc;
+  color: var(--color-medium-text);
   margin-bottom: 2px;
 }
 
@@ -345,45 +372,33 @@ align-self: flex-end;
   font-size: 1rem;
 }
 
-
 .chat-input-form {
   display: flex;
   padding: 12px 16px;
-  background-color: rgba(0, 0, 0, 0.0);
+  background-color: rgba(0, 0, 0, 0); /* Explicitly transparent */
   border-radius: 0 0 12px 12px;
   gap: 1rem;
   align-items: center;
-  max-width: 100%;
+  width: 100%; /* Ensure it spans the full width */
+  box-sizing: border-box; /* Include padding in width */
 }
 
 .chat-input {
   flex: 1;
-  display: flex;
-  max-width: none;
   border: none;
   padding: 10px 12px;
-  height: 28px;
-  border-radius: 20px;
+  height: 28px; /* Fixed height for consistency */
+  border-radius: var(--border-radius-pill);
   font-size: 1rem;
   background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--color-white);
   outline: none;
   box-sizing: border-box;
-  transition: background-color 0.3s ease;
-
-}
-
-.chat-input input[type="text"] {
-  flex: 1;
-  padding: 8px;
-  font-size: 1rem;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  margin-right: 10px;
+  transition: background-color var(--animation-speed-normal) ease;
 }
 
 .chat-input::placeholder {
-  color: #ccc;
+  color: var(--color-medium-text);
 }
 
 .chat-input:focus {
@@ -391,25 +406,25 @@ align-self: flex-end;
 }
 
 .chat-send-btn {
-  background-color: #007bff;
-  color: #ffd700;
+  background-color: #007bff; /* Specific blue, could be a variable */
+  color: var(--color-gold-accent);
   border: none;
   padding: 4px 16px;
   font-size: 1rem;
-  border-radius: 20px;
+  border-radius: var(--border-radius-pill);
   cursor: pointer;
   height: 28px;
   font-weight: 600;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--animation-speed-normal) ease;
 }
 
 .chat-send-btn:disabled {
-  background-color: #333;
+  background-color: var(--color-gray-dark);
   cursor: not-allowed;
 }
 
 .chat-send-btn:hover:not(:disabled) {
-  background-color: #0a7777;
+  background-color: #0a7777; /* Specific hover color */
 }
 
 /* Global Chat Box */
@@ -420,44 +435,39 @@ align-self: flex-end;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
-  height: 600px;
+  height: 600px; /* This height might be too large if only max-height: 250px is desired */
   background-color: rgba(0, 0, 0, 0.4);
   padding: 15px;
-  max-height: 250px;
+  max-height: 250px; /* This will cap the height */
   overflow: hidden;
-  border: 1px solid #444;
+  border: 1px solid var(--color-gray-medium);
   align-items: center;
-}
-
-.chat-log div {
-  font-size: 1rem;
-  margin-bottom: 0.2rem;
 }
 
 .global-chat input {
   flex: 1;
   padding: 0.4rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+  border-radius: var(--border-radius-medium);
+  border: 1px solid var(--color-medium-text);
   width: 100%;
   margin-top: 10px;
 }
 
 .global-chat button {
   padding: 0.4rem 0.75rem;
-  background-color: #333;
-  color: #ffd700;
+  background-color: var(--color-dark-text);
+  color: var(--color-gold-accent);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--border-radius-medium);
   cursor: pointer;
   margin-left: 1px;
 }
 
-/* lobby.css */
+/* --- Lobby Styles --- */
 .lobby-background {
-  background: linear-gradient(135deg, #088383, #2E8B57, #228b84);
+  background: linear-gradient(135deg, var(--gradient-green-teal-start), var(--gradient-green-teal-mid), var(--gradient-green-teal-end));
   background-size: 300% 300%;
-  animation: gradient-rotate 9s linear infinite;
+  animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
   padding: 30px 20px;
   border-radius: 0 0px 200px 200px;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
@@ -465,7 +475,7 @@ align-self: flex-end;
   max-width: 1000px;
   height: 700px;
   margin: 40px auto;
-  color: white;
+  color: var(--color-white);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -479,8 +489,8 @@ align-self: flex-end;
   text-align: center;
   font-size: 2em;
   margin-bottom: 20px;
-  color: #ffd700;
-  text-shadow: 1px 1px 3px #000;
+  color: var(--color-gold-accent);
+  text-shadow: 1px 1px 3px var(--color-black);
 }
 
 .table-controls {
@@ -490,21 +500,21 @@ align-self: flex-end;
 }
 
 .table-controls button {
-  background-color: #333;
-  color: #ffd700;
+  background-color: var(--color-dark-text);
+  color: var(--color-gold-accent);
   border: none;
   padding: 10px 20px;
   font-size: 1em;
   border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color var(--animation-speed-fast) ease;
 }
 
 .table-controls button:hover {
-  background-color: #555;
+  background-color: var(--color-gray-medium);
 }
 
-/* Controls Section */
+/* --- Controls Section --- */
 .controls {
   margin-top: 30px;
   display: flex;
@@ -515,32 +525,32 @@ align-self: flex-end;
 
 /* Buttons */
 button {
-  background-color: #333;
-  color: #ffd700;
+  background-color: var(--color-dark-text);
+  color: var(--color-gold-accent);
   border: none;
   padding: 12px 20px;
   font-size: 1em;
-  border-radius: 8px;
+  border-radius: var(--border-radius-large);
   margin: 10px;
   cursor: pointer;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color var(--animation-speed-normal) ease, box-shadow var(--animation-speed-normal) ease;
   width: 140px;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
 }
 
 button:hover {
-  background-color: #555;
+  background-color: var(--color-gray-medium);
   box-shadow: 0 6px 10px rgba(0, 0, 0, 0.7);
 }
 
 button:disabled {
-  background-color: #b8d8b8;
+  background-color: #b8d8b8; /* Specific disabled color */
   cursor: not-allowed;
   box-shadow: none;
 }
 
-/* Card Row */
+/* --- Card Row --- */
 .card-row {
   display: flex;
   gap: 15px;
@@ -553,16 +563,36 @@ button:disabled {
 .card-img {
   width: 80px;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--border-radius-large);
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.5);
 }
 
-/* Dealer & Player Areas */
 
+
+
+/* --- Table Seat styles --- */
+.table-seats-container {
+  position: relative;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: green; /* table background */
+  margin: auto;
+  
+}
+
+.seat-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: rotate(var(--seat-angle)) translate(150px) rotate(calc(-1 * var(--seat-angle)));
+}
+
+
+/* --- Dealer & Player Areas --- */
 .player {
   position: absolute;
 }
-
 
 .player.top { top: 0; left: 50%; transform: translateX(-50%); }
 .player.bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
@@ -583,8 +613,8 @@ button:disabled {
 .avatar-circle {
   width: 40px;
   height: 40px;
-  background: #444;
-  color: white;
+  background: var(--color-gray-medium);
+  color: var(--color-white);
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -592,9 +622,9 @@ button:disabled {
 }
 
 .chat-bubble {
-  background: #eee;
+  background: var(--color-gray-light);
   padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-large);
   display: inline-block;
   margin-top: 4px;
 }
@@ -608,11 +638,11 @@ button:disabled {
 
 .dealer-area h2,
 .player-area h2 {
-  color: white;
+  color: var(--color-white);
   margin-top: 1px;
 }
 
-/* Game Over Message */
+/* --- Game Over Message & Popups --- */
 .game-over-message {
   position: fixed;
   top: 70px;
@@ -623,11 +653,11 @@ button:disabled {
   border-radius: 10px;
   font-size: 1.3rem;
   font-weight: bold;
-  color: white;
+  color: var(--color-white);
   z-index: 1100;
   text-align: center;
-  text-shadow: 0 0 6px #000;
-  animation: popIn 0.5s ease-out;
+  text-shadow: 0 0 6px var(--color-black);
+  animation: popIn var(--animation-speed-slow) ease-out;
 }
 
 .game-result-popup {
@@ -636,31 +666,29 @@ button:disabled {
   left: 50%;
   transform: translateX(-50%);
   background: rgba(255, 215, 0, 0.95);
-  color: black;
+  color: var(--color-black);
   font-weight: bold;
   font-size: 1.2rem;
   padding: 12px 24px;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--box-shadow-medium);
   z-index: 1100;
-  animation: popIn 0.3s ease-out;
+  animation: popIn var(--animation-speed-normal) ease-out;
 }
 
-
-
-/* Pop animation */
+/* --- Pop Animation --- */
 @keyframes popIn {
   0% {
-    transform: scale(0.7);
+    transform: translateX(-50%) scale(0.7); /* Include translateX for consistency with initial state */
     opacity: 0;
   }
   100% {
-    transform: scale(1);
+    transform: translateX(-50%) scale(1);
     opacity: 1;
   }
 }
 
-/* Avatar Ring */
+/* --- Avatar Section --- */
 .avatar-ring {
   display: flex;
   justify-content: center;
@@ -670,45 +698,42 @@ button:disabled {
   width: 42%;
 }
 
-/* Avatar Box */
 .avatar-avatar {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Avatar Images */
 .avatar-avatar img {
-  border-radius: 62px;
+  border-radius: 62px; /* Large radius for a circular shape */
   padding: 3px;
-  background: linear-gradient(135deg, #ebeb1c, #ff4b2b, #0dcd10);
+  background: linear-gradient(135deg, var(--gradient-header-start), var(--gradient-header-mid), var(--gradient-header-end));
   background-size: 300% 300%;
-  animation: gradient-rotate 9s linear infinite;
-  border: 3px solid transparent;
+  animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
+  border: 3px solid transparent; /* Keeps border-width consistent */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
 }
 
 .avatar-label {
   margin-top: 6px;
   font-size: 12px;
-  color: #fff;
+  color: var(--color-white);
 }
 
-/* Dealer and Player Avatars */
 .dealer-avatar,
 .player-avatar,
 .avatar-placeholder {
   width: 80px;
   height: 80px;
-  background-color: black;
+  background-color: var(--color-black);
   border-radius: 50%;
-  border: 3px solid rgb(14, 11, 11);
+  border: 3px solid rgb(14, 11, 11); /* Specific dark border color */
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
   transform-origin: bottom center;
   z-index: 3;
 }
 
-/* Gradient Background Animation */
+/* --- Gradient Background Animation --- */
 @keyframes gradient-rotate {
   0% {
     background-position: 0% 50%;
