@@ -181,10 +181,10 @@ body {
   background: linear-gradient(135deg, var(--gradient-green-teal-start), var(--gradient-green-teal-mid), var(--gradient-green-teal-end));
   background-size: 300% 300%;
   animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
-  width: 30vw;
+  width: 40vw;
   max-width: 1200px;
   margin: auto;
-  height: 30vw;
+  height: 35vw;
   border-radius: 0 0 200px 200px;
   box-shadow: var(--box-shadow-heavy);
   padding: 10px 20px 100px;

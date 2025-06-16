@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import PlayerSeat from './playerseat';
 import '../styles/blackjackgame.css';
 
-const TableSeats = ({ players, currentPlayerId }) => {
+const TableSeats = ({ players, currentPlayerId, onSendMessage}) => {
   const count = players.length;
 
   // Debug: Check for duplicate or missing player IDs
@@ -38,6 +38,7 @@ const TableSeats = ({ players, currentPlayerId }) => {
             <PlayerSeat
               player={player}
               isCurrent={player.playerId === currentPlayerId}
+              onSendMessage={onSendMessage}
             />
           </div>
         );

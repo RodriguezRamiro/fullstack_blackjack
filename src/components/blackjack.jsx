@@ -1,16 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../config';
 import socket from '../socket';
 import DealerHand from './dealerhand';
 import PlayerHand from './playerhand';
 import Controls from './controls';
-import '../styles/blackjackgame.css';
 import TableSeats from './tableseats';
+import '../styles/blackjackgame.css';
 
-export default function BlackjackGame({ playerId, username }) {
+export default function BlackjackGame({ username }) {
   const { tableId } = useParams();
   const navigate = useNavigate();
+
+  const [playerId] = useState(() => {
+    let existingId = sessionStorage.getItem('playerId');
+    if (!existingId) {
+      existingId = crypto.randomUUID();
+      sessionStorage.setItem('playerId', existingId);
+    }
+    return existingId;
+  });
 
   const playerIdStr = String(playerId);
 
@@ -20,8 +29,8 @@ export default function BlackjackGame({ playerId, username }) {
   const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState(null);
   const [betAmount, setBetAmount] = useState(10);
+  const [joined, setJoined] = useState(false);
 
-  // Socket event listeners
   useEffect(() => {
     socket.on('connect', () => {
       console.log('Connected to backend via Socket.IO');
@@ -41,6 +50,7 @@ export default function BlackjackGame({ playerId, username }) {
     });
 
     socket.on('game_state', (state) => {
+      console.log("Players in room:", Object.keys(gameState?.players || {}));
       setGameState(state);
       const player = state?.players?.[playerIdStr];
       setPlayerCards(player ? player.hand : []);
@@ -58,11 +68,9 @@ export default function BlackjackGame({ playerId, username }) {
     };
   }, [playerIdStr, navigate]);
 
-  // Join table and send greeting on connect
-  useEffect(() => {
-    if (!tableId || !playerIdStr || !username) return;
-
-    const handleConnect = () => {
+  const handleConnect = useCallback(() => {
+    if (!joined) {
+      setJoined(true);
       socket.emit("join", { tableId, playerId: playerIdStr, username });
       console.log(`Emitted join for player ${username} to room ${tableId}`);
 
@@ -72,20 +80,29 @@ export default function BlackjackGame({ playerId, username }) {
         message: `Hello from ${username}!`,
         username,
       });
+    }
+  }, [joined, tableId, playerIdStr, username]);
+
+  useEffect(() => {
+    if (!tableId || !playerIdStr || !username || joined) return;
+
+    const doJoin = () => {
+      console.log(`Emitting join for player ${username} to room ${tableId}`);
+      socket.emit("join", { tableId, playerId: playerIdStr, username });
+      setJoined(true);
     };
 
     if (socket.connected) {
-      handleConnect();
+      doJoin();
     } else {
-      socket.once('connect', handleConnect);
+      socket.once("connect", doJoin);
     }
 
     return () => {
-      socket.off('connect', handleConnect);
+      socket.off("connect", doJoin);
     };
-  }, [tableId, playerIdStr, username]);
+  }, [tableId, playerIdStr, username, joined]);
 
-  // Listen for joined_room confirmation (optional)
   useEffect(() => {
     const handleJoinedRoom = ({ tableId }) => {
       console.log(`Successfully joined room: ${tableId}`);
@@ -98,11 +115,9 @@ export default function BlackjackGame({ playerId, username }) {
     };
   }, []);
 
-  // Listen for bet_placed event
   useEffect(() => {
     const handleBetPlaced = ({ playerId, bet }) => {
       console.log(`Player ${playerId} placed a bet of $${bet}`);
-      // Optional: update local state or show message
     };
 
     socket.on('bet_placed', handleBetPlaced);
@@ -112,12 +127,8 @@ export default function BlackjackGame({ playerId, username }) {
     };
   }, []);
 
-  // Functions for game actions
   const startGame = async () => {
-    if (!tableId || !playerIdStr) {
-      console.error('Missing tableId or playerId');
-      return;
-    }
+    if (!tableId || !playerIdStr) return;
 
     try {
       const response = await fetch(`${BACKEND_URL}/start-game`, {
@@ -154,6 +165,7 @@ export default function BlackjackGame({ playerId, username }) {
   };
 
   const placeBet = () => {
+    console.log("Placing Bet:", betAmount);
     if (!tableId || !playerIdStr || betAmount < 1) {
       console.error("Invalid bet or missing table/player ID");
       return;
@@ -173,7 +185,25 @@ export default function BlackjackGame({ playerId, username }) {
     });
   };
 
-  // Render result message after game over
+
+
+
+  // **Here we count players and decide if betting is allowed**
+  const numPlayers = gameState?.players ? Object.keys(gameState.players).length : 0;
+  const allowBetting = numPlayers >= 2;
+
+  useEffect(() => {
+    console.log(`Players in game: ${numPlayers} — Allow betting: ${allowBetting}`);
+  }, [numPlayers, allowBetting]);
+
+  useEffect(() => {
+    if (!allowBetting) {
+      setBetAmount(10);
+    }
+  }, [allowBetting]);
+
+
+
   const renderResult = () => {
     if (!gameOver) return null;
     if (!gameState || !gameState.players) return "Game over. Check results!";
@@ -196,23 +226,35 @@ export default function BlackjackGame({ playerId, username }) {
             <h1>Blackjack</h1>
 
             <div className="betting-controls">
-              <label htmlFor="betAmount">Tables Bet ($): </label>
-              <input
-                id="betAmount"
-                type="number"
-                min="1"
-                value={betAmount}
-                onChange={(e) => setBetAmount(Number(e.target.value))}
-                style={{ width: "80px", marginRight: "120px" }}
-                disabled={playerTurn || gameOver}
-              />
-              <button onClick={placeBet} disabled={betAmount < 1 || playerTurn || gameOver}>
-                Raise Bet
-              </button>
-            </div>
+            <label htmlFor="betAmount">Table Bet ($): </label>
+            <input
+              id="betAmount"
+              type="number"
+              min="1"
+              value={betAmount}
+              onChange={(e) => setBetAmount(Number(e.target.value))}
+              style={{ width: "80px", marginRight: "120px" }}
+              disabled={playerTurn || gameOver || !allowBetting}
+            />
+            <button
+              type="button"
+              onClick={placeBet}
+              disabled={betAmount < 1 || playerTurn || gameOver || !allowBetting}
+            >
+              Raise Bet
+            </button>
+            {!allowBetting && (
+              <p style={{ color: "orange", marginTop: "5px" }}>
+                Waiting for more players to join to enable betting.
+              </p>
+            )}
+          </div>
 
             <TableSeats
-              players={gameState?.players ? Object.values(gameState.players) : []}
+              players={gameState?.players ? Object.entries(gameState.players).map(([playerId, playerData]) => ({
+                playerId,
+                ...playerData
+              })) : []}
               currentPlayerId={playerIdStr}
               onSendMessage={sendMessage}
             />

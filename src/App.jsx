@@ -32,7 +32,6 @@ function Lobby({ playerId, username }) {
 
       const data = await res.json();
       navigate(`/table/${data.tableId}`);
-      socket.emit("join", { tableId: data.tableId, playerId, username });
     } catch (error) {
       console.error("Error creating table:", error);
     }
@@ -42,7 +41,6 @@ function Lobby({ playerId, username }) {
     const inputId = prompt("Enter Table ID");
     if (inputId) {
       navigate(`/table/${inputId}`);
-      socket.emit("join", { tableId: inputId, playerId, username });
     }
   };
 

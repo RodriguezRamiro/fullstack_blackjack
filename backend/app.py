@@ -91,19 +91,30 @@ def start_game():
     table_id = data.get("tableId")
     player_id = data.get("playerId")
 
+    print(f"recieved start-game request: tableId={table_id}, playerId={player_id}")
+
     if not table_id or not player_id:
+        print("missing tbaleId or playerId in request")
         return jsonify({"error": "Missing tableId or playerId."}), 404
 
     if table_id not in game_rooms:
+        print(f"Room {table_id} does not exist in game_rooms")
+        print(f"Current rooms: {list(game_rooms.keys())}")
         return jsonify({"error": "Room does not exist."}), 400
 
     room = game_rooms[table_id]
 
+    print(f"players in room: {list(room['players'].keys())}")
+    for pid, player in room["players"].items():
+        print(f"Player {pid} bet: {player.get('bet')}")
+
     # Ensure all players placed bet
     if any("bet" not in p or p["bet"] <= 0 for p in room["players"].values()):
+        print("Not all players have placed a valid bet")
         return jsonify({"error": "All players must place a valid bet before starting."}), 400
 
     if player_id not in room["players"]:
+        print(f"Player {player_id} not found in room players")
         return jsonify({"error": "Player not found in room."}), 400
 
     room["started"] = True
@@ -207,6 +218,9 @@ def handle_place_bet(data):
         'chips': player['chips']
     }, room=table_id)
 
+def can_place_bet(room_id):
+    return len(rooms.get(room_id, [])) > 1
+
 def get_private_game_state(room, player_id):
     private_players = {}
     for pid, pdata in room["players"].items():
@@ -254,6 +268,14 @@ def handle_join(data):
 
     join_room(table_id)
 
+    print(f"Players in room {table_id}: {list(room['players'].keys())}")
+
+
+# Emit updated player list (send usernames or player IDs)
+    player_list = [p["username"] for p in room["players"].values()]
+    emit("players_update", player_list, room=table_id)
+
+
     # Leave other rooms except this and private sid room
     current_rooms = rooms(request.sid)
     for r in current_rooms:
@@ -263,7 +285,9 @@ def handle_join(data):
     emit("joined_room", {"tableId": table_id}, to=request.sid)
 
     emit("game_state", {
-        "players": room["players"],
+        "players": [
+            {"playeId": pid, **pdata} for pid, pdata in room["players"].items()
+        ],
         "dealer": room["dealer"],
         "deckCount": len(room["deck"]),
         "game_over": room["game_over"]
@@ -420,19 +444,33 @@ def handle_disconnect():
         for pid in to_remove:
                 leave_room(table_id, sid=sid)
                 del room["players"][pid]
+                print(f"Removed player {pid} from {table_id}")
+
+        #Emit updated player list after removals
+        player_list =[p["username"] for p in room["players"].values()]
+        emit("players_update", player_list, room=table_id)
+
         if not room["players"]:
             tables_to_delete.append(table_id)
 
     for table_id in tables_to_delete:
+        print(f"Deleting empty table {table_id}")
         del game_rooms[table_id]
 
 def public_dealer_hand(dealer, game_over):
+    print("fpublic_dealer_hand called with dealer: {dealer}, game_over: {game_over}")
+    if not dealer or "hand" not in dealer or len(dealer["hand"]) == 0:
+        print("Dealer hand empty or missing, returning empty")
+        #Dealer hand not ready yet, return empty or placeholder
+        return {"hand": [], "score": 0}
     if game_over:
-        return dealer
-    return {
-        "hand": [dealer["hand"][0], "Hidden"],
-        "score": None
-    }
+        #Show full dealer hand if game over
+        return {"hand": dealer["hand"], "score": dealer["score"]}
+
+    else:
+        #Show only first card, hide second
+        return {"hand":[dealer["hand"][0], "Hidden"], "score": dealer["hand"][0]["value"]}
+
 
 @socketio.on("chat_message")
 def handle_chat_message(data):

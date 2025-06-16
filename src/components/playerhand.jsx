@@ -35,7 +35,7 @@ export default function PlayerHand({ cards = [], username = "Player" }) {
         <img
           src={playerImage}
           alt={`${username}'s avatar`}
-          className="player-hand-avatar"
+          className="player-avatar"
         />
         <h2>{username}'s Hand</h2>
       </div>
