@@ -1,4 +1,4 @@
-
+#/backend/app.py
 
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
@@ -25,6 +25,7 @@ CORS(app, supports_credentials=True, origins=allowed_origins)
 socketio = SocketIO(app, cors_allowed_origins=allowed_origins, async_mode="threading")
 
 game_rooms = {}
+
 
 def create_deck():
     suits_map = {
@@ -56,18 +57,43 @@ def create_deck():
     ]
 
 def calculate_score(hand):
+    print(f"Calculating score for hand: {hand}")
+
+    values = {
+        'A': 11, '2': 2, '3': 3, '4': 4, '5': 5,
+        '6': 6, '7': 7, '8': 8, '9': 9, '10': 10,
+        'J': 10, 'Q': 10, 'K': 10
+    }
+
     score = 0
     aces = 0
+
     for card in hand:
-        if card["rank"].isdigit():
-            score += int(card["rank"])
-        elif card["rank"] in ["J", "Q", "K"]:
-            score += 10
-        else:  # Ace
-            aces += 1
-    for _ in range(aces):
-        score += 11 if score + 11 <= 21 else 1
+        print(f" Card details: {card}")
+        rank = card.get('rank')
+
+        # Normalize bad rank values (e.g., some APIs may return '0' for '10')
+        if rank == '0':
+            rank = '10'
+
+        if not rank:
+            print(f"[Error] Malformed card object: {card}")
+            continue
+
+        if rank in values:
+            score += values[rank]
+            if rank == 'A':
+                aces += 1
+        else:
+            print(f"[WARNING] Unknown rank value: {rank}")
+
+    # Adjust for Aces if score is over 21
+    while score > 21 and aces:
+        score -= 10
+        aces -= 1
+
     return score
+
 
 @app.route("/create-room", methods=["POST"])
 def create_room():
@@ -94,7 +120,7 @@ def start_game():
     print(f"recieved start-game request: tableId={table_id}, playerId={player_id}")
 
     if not table_id or not player_id:
-        print("missing tbaleId or playerId in request")
+        print("Missing tableId or playerId in request")
         return jsonify({"error": "Missing tableId or playerId."}), 404
 
     if table_id not in game_rooms:
@@ -108,10 +134,17 @@ def start_game():
     for pid, player in room["players"].items():
         print(f"Player {pid} bet: {player.get('bet')}")
 
-    # Ensure all players placed bet
-    if any("bet" not in p or p["bet"] <= 0 for p in room["players"].values()):
-        print("Not all players have placed a valid bet")
-        return jsonify({"error": "All players must place a valid bet before starting."}), 400
+    # Only require valid bets if there are 2 or more players
+    if len(room["players"]) >= 2:
+        if any("bet" not in p or p["bet"] <=0 for p in room["players"].values()):
+            print("Not all players have placed a valid bet")
+            return jsonify({"error": "All players must playce a valid bet before starting."}), 400
+    else:
+        print("only one player in room - skipping bet validation")
+        #Set default bet zero for constistancy
+        for p in room["players"].values():
+            p.setdefault("bet", 0)
+            p.setdefault("chips", 1000)
 
     if player_id not in room["players"]:
         print(f"Player {player_id} not found in room players")
@@ -122,11 +155,20 @@ def start_game():
 
     needed_cards = len(room["players"]) * 2 + 2
     if len(room["deck"]) < needed_cards:
-        room["deck"] += create_deck()
+        new_deck = create_deck()
+        room["deck"] += [
+        {
+            "suit": card.get("suit", ""),
+            "rank": card.get("rank") or card.get("value", ""),
+            "image": card.get("image", "")
+        } for card in new_deck
+]
 
     random.shuffle(room["deck"])
 
+    print("Initial cards being used:")
     for pid in room["players"]:
+        # Draw cards to check them before score calculation
         hand = [room["deck"].pop(), room["deck"].pop()]
         room["players"][pid].update({
             "hand": hand,
@@ -138,7 +180,11 @@ def start_game():
         "hand": [room["deck"].pop(), room["deck"].pop()],
         "score": 0
     }
-    room["dealer"]["score"] = calculate_score(room["dealer"]["hand"])
+    try:
+        room["dealer"]["score"] = calculate_score(room["dealer"]["hand"])
+    except Exception as e:
+        print(f"[ERROR] Failed to calculate dealer score: {e}")
+        return jsonify({"error": "Failed to calculate dealer score."}), 500
 
     emit_game_state(room, table_id)
 
@@ -310,7 +356,14 @@ def handle_hit(data):
         return
 
     if len(room["deck"]) == 0:
-        room["deck"] += create_deck()
+        new_deck = create_deck()
+        room["deck"] += [
+            {
+                "suit": card.get("suit", ""),
+                "rank": card.get("rank") or card.get("value", ""),
+                "image": card.get("image", "")
+            } for card in new_deck
+]
         random.shuffle(room["deck"])
 
     card = room["deck"].pop()
@@ -344,7 +397,14 @@ def handle_stay(data):
     if all(p["status"] in ["bust", "stay"] for p in room["players"].values()):
         while room["dealer"]["score"] < 17:
             if len(room["deck"]) == 0:
-                room["deck"] += create_deck()
+                new_deck = create_deck()
+                room["deck"] += [
+                    {
+                        "suit": card.get("suit", ""),
+                        "rank": card.get("rank") or card.get("value", ""),
+                        "image": card.get("image", "")
+                    } for card in new_deck
+]
                 random.shuffle(room["deck"])
             room["dealer"]["hand"].append(room["deck"].pop())
             room["dealer"]["score"] = calculate_score(room["dealer"]["hand"])
@@ -360,10 +420,15 @@ def resolve_game(table_id):
 
     for player_id, player in room['players'].items():
         bet = player.get('bet', 0)
-        player_score = player['score']
+        player_score = player.get('score', 0)
+
+        # Ensure chips key exists
+        player.setdefault("chips", 0)
+
 
         if player['status'] == 'bust' or player_score > 21:
             player['result'] = 'lose'
+            # chips stay the same
         elif dealer_score > 21 or player_score > dealer_score:
             player['result'] = 'win'
             player['chips'] += bet * 2
@@ -372,6 +437,7 @@ def resolve_game(table_id):
             player['chips'] += bet
         else:
             player['result'] = 'lose'
+            # chips stay the same
 
         print(f"Player {player_id} result: {player['result']} | Chips: {player['chips']}")
 
@@ -387,7 +453,7 @@ def resolve_game(table_id):
         'dealer': room['dealer']
     }, room=table_id)
 
-    emit("game_state", {
+    socketio.emit("game_state", {
         "players": room["players"],
         "dealer": room["dealer"],
         "deckCount": len(room["deck"]),
@@ -410,7 +476,10 @@ def handle_leave(data):
             emit_game_state(game_rooms.get(table_id, {}), table_id)
 
 def emit_game_state(room, table_id, sid=None):
-    emit("game_state", {
+    if not room:
+        print(f"[WARNING] emit_game_state called with empty room: {table_id}")
+        return
+    socketio.emit("game_state", {
         "players": {
             pid: {
                 "username": pdata["username"],
@@ -458,7 +527,7 @@ def handle_disconnect():
         del game_rooms[table_id]
 
 def public_dealer_hand(dealer, game_over):
-    print("fpublic_dealer_hand called with dealer: {dealer}, game_over: {game_over}")
+    print(f"public_dealer_hand called with dealer: {dealer}, game_over: {game_over}")
     if not dealer or "hand" not in dealer or len(dealer["hand"]) == 0:
         print("Dealer hand empty or missing, returning empty")
         #Dealer hand not ready yet, return empty or placeholder
@@ -469,7 +538,10 @@ def public_dealer_hand(dealer, game_over):
 
     else:
         #Show only first card, hide second
-        return {"hand":[dealer["hand"][0], "Hidden"], "score": dealer["hand"][0]["value"]}
+        first_card = dealer["hand"][0]
+        rank = first_card.get("rank")
+        partial_score = 11 if rank == "A" else 10 if rank in ["K", "Q", "J"] else int(rank) if rank.isdigit() else 0
+        return {"hand": [first_card, "Hidden"], "score": partial_score}
 
 
 @socketio.on("chat_message")
@@ -504,4 +576,3 @@ def handle_chat_message(data):
 if __name__ == "__main__":
     print("Before socketio.run")
     socketio.run(app, host="0.0.0.0", port=port)
-    print("After socketio.run (should never reach here)")

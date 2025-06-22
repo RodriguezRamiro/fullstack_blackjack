@@ -1,3 +1,5 @@
+//src/blackjack.jsx
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../config';
@@ -50,8 +52,8 @@ export default function BlackjackGame({ username }) {
     });
 
     socket.on('game_state', (state) => {
-      console.log("Players in room:", Object.keys(gameState?.players || {}));
       setGameState(state);
+      console.log("Players in room:", Object.keys(gameState?.players || {}));
       const player = state?.players?.[playerIdStr];
       setPlayerCards(player ? player.hand : []);
       setDealerCards(state.dealer?.hand || []);
