@@ -10,20 +10,13 @@ import Controls from './controls';
 import TableSeats from './tableseats';
 import '../styles/blackjackgame.css';
 
-export default function BlackjackGame({ username }) {
+export default function BlackjackGame({ username, playerId }) {
   const { tableId } = useParams();
   const navigate = useNavigate();
 
-  const [playerId] = useState(() => {
-    let existingId = sessionStorage.getItem('playerId');
-    if (!existingId) {
-      existingId = crypto.randomUUID();
-      sessionStorage.setItem('playerId', existingId);
-    }
-    return existingId;
-  });
-
   const playerIdStr = String(playerId);
+
+
 
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
@@ -32,6 +25,7 @@ export default function BlackjackGame({ username }) {
   const [gameState, setGameState] = useState(null);
   const [betAmount, setBetAmount] = useState(10);
   const [joined, setJoined] = useState(false);
+
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -53,7 +47,7 @@ export default function BlackjackGame({ username }) {
 
     socket.on('game_state', (state) => {
       setGameState(state);
-      console.log("Players in room:", Object.keys(gameState?.players || {}));
+      console.log("Players in room:", Object.keys(state?.players || {}));
       const player = state?.players?.[playerIdStr];
       setPlayerCards(player ? player.hand : []);
       setDealerCards(state.dealer?.hand || []);
@@ -70,11 +64,19 @@ export default function BlackjackGame({ username }) {
     };
   }, [playerIdStr, navigate]);
 
-  const handleConnect = useCallback(() => {
-    if (!joined) {
-      setJoined(true);
+  useEffect(() => {
+    if (!tableId || !playerIdStr || !username || joined) return;
+    console.log("Join condition check:", { tableId, playerIdStr, username, joined });
+
+
+    const doJoin = () => {
+      console.log(">>> Attempting to join with:", {
+        tableId,
+        playerId: playerIdStr,
+        username,
+      });
+
       socket.emit("join", { tableId, playerId: playerIdStr, username });
-      console.log(`Emitted join for player ${username} to room ${tableId}`);
 
       socket.emit('chat_message', {
         tableId,
@@ -82,16 +84,6 @@ export default function BlackjackGame({ username }) {
         message: `Hello from ${username}!`,
         username,
       });
-    }
-  }, [joined, tableId, playerIdStr, username]);
-
-  useEffect(() => {
-    if (!tableId || !playerIdStr || !username || joined) return;
-
-    const doJoin = () => {
-      console.log(`Emitting join for player ${username} to room ${tableId}`);
-      socket.emit("join", { tableId, playerId: playerIdStr, username });
-      setJoined(true);
     };
 
     if (socket.connected) {
@@ -103,11 +95,13 @@ export default function BlackjackGame({ username }) {
     return () => {
       socket.off("connect", doJoin);
     };
-  }, [tableId, playerIdStr, username, joined]);
+       }, [tableId, playerIdStr, username, joined]);
+
 
   useEffect(() => {
     const handleJoinedRoom = ({ tableId }) => {
       console.log(`Successfully joined room: ${tableId}`);
+      setJoined(true);
     };
 
     socket.on('joined_room', handleJoinedRoom);
@@ -116,6 +110,10 @@ export default function BlackjackGame({ username }) {
       socket.off('joined_room', handleJoinedRoom);
     };
   }, []);
+
+  useEffect(() => {
+    console.log("Joined:", joined, "GameState:", gameState);
+  }, [joined, gameState])
 
   useEffect(() => {
     const handleBetPlaced = ({ playerId, bet }) => {
@@ -130,7 +128,10 @@ export default function BlackjackGame({ username }) {
   }, []);
 
   const startGame = async () => {
-    if (!tableId || !playerIdStr) return;
+    if (!tableId || !playerIdStr || !joined){
+      console.warn("not ready to start game: missing table ID, player ID or not joined yet.");
+      return;
+    }
 
     try {
       const response = await fetch(`${BACKEND_URL}/start-game`, {
@@ -144,11 +145,13 @@ export default function BlackjackGame({ username }) {
         throw new Error(`Server error: ${response.status} ${response.statusText}`);
       }
 
+
       const data = await response.json();
       console.log('Game started at table:', data.tableId);
     } catch (error) {
       console.error('Error starting the game:', error);
     }
+
   };
 
   const hit = () => {
@@ -269,7 +272,7 @@ export default function BlackjackGame({ username }) {
               onHit={hit}
               onStay={stay}
               onReset={() => window.location.reload()}
-              disabled={!playerTurn}
+              disabled={!playerTurn || !joined}
               gameOver={gameOver}
               canDeal={true}
             />

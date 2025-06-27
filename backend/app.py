@@ -155,14 +155,7 @@ def start_game():
 
     needed_cards = len(room["players"]) * 2 + 2
     if len(room["deck"]) < needed_cards:
-        new_deck = create_deck()
-        room["deck"] += [
-        {
-            "suit": card.get("suit", ""),
-            "rank": card.get("rank") or card.get("value", ""),
-            "image": card.get("image", "")
-        } for card in new_deck
-]
+        room["deck"] += create_deck()
 
     random.shuffle(room["deck"])
 
@@ -296,6 +289,8 @@ def handle_join(data):
         print("Join failed: missing data", data)
         return
 
+    print(f" Before Join: {list(game_rooms.get(table_id, {}).get('players', {}).keys())}")
+
     if table_id not in game_rooms:
         emit("room_not_found", {}, to=request.sid)
         return
@@ -307,6 +302,7 @@ def handle_join(data):
             "hand": [],
             "score": 0,
             "status": "waiting",
+            "chips": 1000,
             "sid": request.sid
         }
     else:
@@ -314,7 +310,10 @@ def handle_join(data):
 
     join_room(table_id)
 
-    print(f"Players in room {table_id}: {list(room['players'].keys())}")
+    print(f"[JOIN] player_id={player_id}, sid={request.sid}, table={table_id}, username={username}")
+    print(f"After Join: {list(room['players'].keys())}")
+
+    emit("joined_room", {"tableId": table_id}, to=request.sid)
 
 
 # Emit updated player list (send usernames or player IDs)
