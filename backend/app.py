@@ -327,16 +327,15 @@ def handle_join(data):
         if r != request.sid and r != table_id:
             leave_room(r)
 
-    emit("joined_room", {"tableId": table_id}, to=request.sid)
 
     emit("game_state", {
-        "players": [
-            {"playeId": pid, **pdata} for pid, pdata in room["players"].items()
-        ],
-        "dealer": room["dealer"],
-        "deckCount": len(room["deck"]),
-        "game_over": room["game_over"]
-    }, room=table_id)
+    "players": {
+    pid: pdata for pid, pdata in room["players"].items()
+},
+    "dealer": room["dealer"],
+    "deckCount": len(room["deck"]),
+    "game_over": room["game_over"]
+}, room=table_id)
 
 @socketio.on("hit")
 def handle_hit(data):
