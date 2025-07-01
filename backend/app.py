@@ -54,6 +54,7 @@ def create_deck():
             "image": card["image"]
         }
         for card in cards
+            print("Fetched card:", card)
     ]
 
 def calculate_score(hand):
