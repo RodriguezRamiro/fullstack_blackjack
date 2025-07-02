@@ -263,9 +263,15 @@ export default function BlackjackGame({ username, playerId }) {
               currentPlayerId={playerIdStr}
               onSendMessage={sendMessage}
             />
+            <div className="table-seats-layout">
+  <div className="blackjack-table">
+    <DealerHand cards={dealerCards} />
+    {/* Only dealer inside table */}
+  </div>
 
-            <DealerHand cards={dealerCards} />
-            <PlayerHand cards={playerCards} username={username} />
+  {/* Put the player's seat outside */}
+  <PlayerHand cards={playerCards} username={username} />
+</div>
 
             <Controls
               onDeal={startGame}

@@ -188,6 +188,7 @@ body {
   border-radius: 0 0 200px 200px;
   box-shadow: var(--box-shadow-heavy);
   padding: 10px 20px 100px;
+  padding-bottom: 150px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -631,6 +632,11 @@ button:disabled {
 
 .dealer-area,
 .player-area {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;

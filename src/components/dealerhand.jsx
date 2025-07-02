@@ -58,7 +58,7 @@ export default function DealerHand({ cards = [], reveal = true }) {
             <img
             key={card.code !== 'Hidden' ? `${card.code}-${idx}` : `hidden-${idx}`}
             src={card.image}
-            alt={card.rank === 'Hidden' ? 'Facedown card' : `Card ${card.code}`}
+            alt={card.value === 'Hidden' ? 'Facedown card' : `Card ${card.rank} of ${card.suit}`}
             className="card-img"
             />
           ))

@@ -47,15 +47,19 @@ def create_deck():
 
     cards = response.json()["cards"]
 
+
+    for card in cards:
+        print("Fetched card:", card)
+
     return [
-        {
-            "suit": suits_map.get(card["suit"], card["suit"]),
-            "rank": rank_map.get(card["value"], card["value"]),
-            "image": card["image"]
-        }
-        for card in cards
-            print("Fetched card:", card)
-    ]
+    {
+        "suit": suits_map.get(card["suit"], card["suit"]),
+        "rank": rank_map.get(card["value"], card["value"]) if card["value"] != "0" else "10",
+        "image": card["image"]
+    }
+    for card in cards
+]
+
 
 def calculate_score(hand):
     print(f"Calculating score for hand: {hand}")

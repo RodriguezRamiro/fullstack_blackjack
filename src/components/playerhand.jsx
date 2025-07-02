@@ -46,7 +46,7 @@ export default function PlayerHand({ cards = [], username = "Player" }) {
             <img
               key={card.code ? `${card.code}-${idx}` : `card-${idx}`}
               src={card.image}
-              alt={`Card ${card.value} of ${card.suit}`}
+              alt={`Card ${card.rank} of ${card.suit}`}
               className="card-img"
             />
           ))
