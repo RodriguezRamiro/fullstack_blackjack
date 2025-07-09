@@ -28,6 +28,8 @@ const TableSeats = ({ players, currentPlayerId, onSendMessage}) => {
         // Use playerId if available and unique, else fallback to index key
         const key = player.playerId ?? `seat-fallback-${idx}`;
 
+        
+
         return (
           <div
             key={key}
@@ -40,6 +42,7 @@ const TableSeats = ({ players, currentPlayerId, onSendMessage}) => {
               isCurrent={player.playerId === currentPlayerId}
               onSendMessage={onSendMessage}
             />
+
           </div>
         );
       })}

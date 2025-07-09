@@ -227,67 +227,75 @@ export default function BlackjackGame({ username, playerId }) {
     <div className="game-wrapper">
       {tableId ? (
         <div className="table-seats-layout">
+
           <div className="blackjack-table">
-            <h1>Blackjack</h1>
+            <h1 className="table-title">Blackjack</h1>
 
-            <div className="betting-controls">
-            <label htmlFor="betAmount">Table Bet ($): </label>
-            <input
-              id="betAmount"
-              type="number"
-              min="1"
-              value={betAmount}
-              onChange={(e) => setBetAmount(Number(e.target.value))}
-              style={{ width: "80px", marginRight: "120px" }}
-              disabled={playerTurn || gameOver || !allowBetting}
-            />
-            <button
-              type="button"
-              onClick={placeBet}
-              disabled={betAmount < 1 || playerTurn || gameOver || !allowBetting}
-            >
-              Raise Bet
-            </button>
-            {!allowBetting && (
-              <p style={{ color: "orange", marginTop: "5px" }}>
-                Waiting for more players to join to enable betting.
-              </p>
-            )}
-          </div>
+            {/* Two column layout starts here */}
+            <div className="blackjack-content">
 
-            <TableSeats
-              players={gameState?.players ? Object.entries(gameState.players).map(([playerId, playerData]) => ({
-                playerId,
-                ...playerData
-              })) : []}
-              currentPlayerId={playerIdStr}
-              onSendMessage={sendMessage}
-            />
-            <div className="table-seats-layout">
-  <div className="blackjack-table">
-    <DealerHand cards={dealerCards} />
-    {/* Only dealer inside table */}
-  </div>
+              {/* LEFT SIDE — Game Area */}
+              <div className="blackjack-left">
+                <div className="betting-controls">
+                  <label htmlFor="betAmount">Table Bet ($): </label>
+                  <input
+                    id="betAmount"
+                    type="number"
+                    min="1"
+                    value={betAmount}
+                    onChange={(e) => setBetAmount(Number(e.target.value))}
+                    style={{ width: "80px", marginRight: "120px" }}
+                    disabled={playerTurn || gameOver || !allowBetting}
+                  />
+                  <button
+                    type="button"
+                    onClick={placeBet}
+                    disabled={betAmount < 1 || playerTurn || gameOver || !allowBetting}
+                  >
+                    Raise Bet
+                  </button>
+                  {!allowBetting && (
+                    <p style={{ color: "orange", marginTop: "5px" }}>
+                      Waiting for more players to join to enable betting.
+                    </p>
+                  )}
+                </div>
 
-  {/* Put the player's seat outside */}
-  <PlayerHand cards={playerCards} username={username} />
-</div>
+                <DealerHand cards={dealerCards} />
 
-            <Controls
-              onDeal={startGame}
-              onHit={hit}
-              onStay={stay}
-              onReset={() => window.location.reload()}
-              disabled={!playerTurn || !joined}
-              gameOver={gameOver}
-              canDeal={true}
-            />
+                <Controls
+                  onDeal={startGame}
+                  onHit={hit}
+                  onStay={stay}
+                  onReset={() => window.location.reload()}
+                  disabled={!playerTurn || !joined}
+                  gameOver={gameOver}
+                  canDeal={true}
+                />
 
-            {gameOver && (
-              <div className="game-over-message">
-                <strong>{renderResult()}</strong>
+                {gameOver && (
+                  <div className="game-over-message">
+                    <strong>{renderResult()}</strong>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* RIGHT SIDE — Chat / Players */}
+              <div className="blackjack-right">
+                <TableSeats
+                  players={
+                    gameState?.players
+                      ? Object.entries(gameState.players).map(([playerId, playerData]) => ({
+                          playerId,
+                          ...playerData,
+                        }))
+                      : []
+                  }
+                  currentPlayerId={playerIdStr}
+                  onSendMessage={sendMessage}
+                />
+              </div>
+            </div>
           </div>
         </div>
       ) : (
