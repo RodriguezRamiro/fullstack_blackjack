@@ -190,9 +190,6 @@ export default function BlackjackGame({ username, playerId }) {
     });
   };
 
-
-
-
   // **Here we count players and decide if betting is allowed**
   const numPlayers = gameState?.players ? Object.keys(gameState.players).length : 0;
   const allowBetting = numPlayers >= 2;
@@ -229,7 +226,6 @@ export default function BlackjackGame({ username, playerId }) {
         <div className="table-seats-layout">
 
           <div className="blackjack-table">
-            <h1 className="table-title">Blackjack</h1>
 
             {/* Two column layout starts here */}
             <div className="blackjack-content">

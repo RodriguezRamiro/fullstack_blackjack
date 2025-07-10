@@ -24,7 +24,7 @@ const PlayerSeat = ({ player, isCurrent, onSendMessage }) => {
       </div>
       <div className="hand">
         {player.hand.map((card, idx) => (
-          <img key={idx} src={card.image} alt={`${card.rank} of ${card.suit}`} />
+          <img key={idx} src={card.image} alt={`${card.rank} of ${card.suit}`} className="card-img player-card" />
         ))}
       </div>
       {player.chatBubble && (
