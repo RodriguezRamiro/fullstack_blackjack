@@ -182,12 +182,16 @@ export default function BlackjackGame({ username, playerId }) {
   };
 
   const sendMessage = (msg) => {
-    socket.emit('chat_message', {
-      tableId,
+    const data = {
       playerId: playerIdStr,
       username,
       message: msg,
-    });
+    };
+
+    if (tableId) {
+      data.tableId = tableId;
+    }
+      socket.emit('chat_message', data);
   };
 
   // **Here we count players and decide if betting is allowed**

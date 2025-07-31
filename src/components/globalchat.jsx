@@ -1,4 +1,4 @@
-// GlobalChatBox.js (chat before joining a room)
+//src/components/GlobalChat.jxs (chat before joining a room)
 
 import React, { useEffect, useState, useRef } from "react";
 import socket from "../socket"; //
@@ -29,10 +29,18 @@ function GlobalChat({ username }) {
     const trimmed = message.trim();
     if (trimmed === "") return;
 
+    // SEND
     socket.emit("chat_message", {
       username,
       message: trimmed,
-      isglobal: true,
+      isGlobal: true,
+    });
+
+    // RECIEVE
+    socket.on("chat_message", (data) => {
+      if (data.isGlobal) {
+        setChatLog((prev) => [...prev, data]);
+      }
     });
 
     setMessage("");

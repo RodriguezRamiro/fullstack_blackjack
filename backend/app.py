@@ -1,6 +1,8 @@
+# App.py
+
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, join_room, leave_room, emit, rooms
-from datetime import datetime
+from datetime import datetime, timezone
 import os
 from flask_cors import CORS
 import random
@@ -155,8 +157,9 @@ def start_game():
         print(f"Player {player_id} not found in room players {table_id}")
         return jsonify({"error": "Player not found in room."}), 400
 
-    if room["started"]:
-        print(f"Game in room {table_id} already started.")
+    # Allow game start if a previous game was already started but it has ended (game_over = True)
+    if room["started"] and not room.get("game_over", False):
+        print(f"Game in room {table_id} already started and not over.")
         return jsonify({"error": "Game already started."}), 400
 
     # Betting logic adjustment for playing without betting when alone
@@ -175,8 +178,9 @@ def start_game():
             p.setdefault("bet", 0)
             p.setdefault("chips", 1000) # Initialize chips if not already present
 
-    room["started"] = True
-    room["game_over"] = False
+    room["started"] = False
+    room["game_over"] = True
+    room["current_turn"] = None
 
     # Reset hands and scores for all players and dealer
     for pid in room["players"]:
@@ -397,7 +401,7 @@ def handle_join(data):
     emit("joined_room", {"tableId": table_id}, to=request.sid)
 
     # Emit updated player list to all in the room
-    player_list = [{"id": pid, "username": p["username"]} for pid, p in room["players"].values()]
+    player_list = [{"id": pid, "username": p["username"]} for pid, p in room["players"].items()]
     emit("players_update", player_list, room=table_id)
 
     # Emit initial game state to the joining player (private view)
@@ -742,7 +746,14 @@ def emit_game_state(room, table_id, requesting_sid=None):
 @socketio.on("disconnect")
 def handle_disconnect():
     sid = request.sid
-    print(f"Client {sid} disconnected.")
+    for table_id, table in rooms.items():
+        players = table.get('players', {})
+        for pid in player in list(players.items()):
+            if player.get('sid') == sid:
+                print(f"Player {pid} disconnected from table {table_id}")
+                del players[pid]
+                break
+        send_game_state(table_id)
 
     tables_to_delete = []
     for table_id, room in list(game_rooms.items()):
@@ -818,16 +829,62 @@ def public_dealer_hand(dealer, game_over):
         return {"hand": [first_card, hidden_card_placeholder], "score": partial_score}
 
 
+@socketio.on('reset_game')
+def handle_reset_game(data):
+    table_id = data['tableId']
+    if table_id in rooms:
+        room = rooms[table_id]
+        for player in room.get("players", {}).values():
+            player['hand'] = []
+            player['bet'] = 0
+            player['result'] = None
+        room["dealer_hand"] = []
+        room["turn_index"] = 0
+        room["game_over"] = False
+        room["deck"] = get_new_deck()
+        send_game_state(table_id)
+
+
 @socketio.on("chat_message")
 def handle_chat_message(data):
     table_id = data.get("tableId")
     player_id = data.get("playerId")
-    message = data.get("message")
+    message = data.get("message", "").strip()
+    is_global = data.get('isglobal', False)
     username = data.get("username", "Anonymous") # Fallback username
+
+    print(f"Chat received: {data}")
 
     if not message:
         print(f"Empty chat message received from {player_id}.")
         return
+
+    # Determine room + username
+    target_room = None
+    if not is_global and table_id and table_id in game_rooms:
+        room = game_rooms[table_id]
+        if player_id in room["players"]:
+            username = room["players"][player_id]["username"]
+            target_room = f"table{table_id}"
+            is_global = False
+
+        else:
+            print(f"Unknown player {player_id} for table {table_id}, treating as global.")
+            is_global = True
+    else:
+        is_global = True
+
+    chat_data = {
+        "playerId": player_id,
+        "username": username,
+        "message": message,
+        "isGlobal": is_global,
+        "tableId": table_id if not is_global else None,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+
+
+    }
+
 
     is_global = True
     target_room = None
@@ -850,7 +907,9 @@ def handle_chat_message(data):
         "message": message,
         "isGlobal": is_global, # Changed to camelCase for frontend consistency
         "tableId": table_id if not is_global else None, # Only send tableId if not global
-        "timestamp": datetime.utcnow().isoformat() + "Z"
+        "timestamp": datetime.now(timezone.utc).isoformat()
+
+
     }
 
     if target_room:

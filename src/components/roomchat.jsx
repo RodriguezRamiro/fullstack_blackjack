@@ -52,6 +52,7 @@ const RoomChat = ({ socket, tableId, playerId, username }) => {
       playerId,
       username,
       message: input.trim(),
+      isGlobal: false,
     });
 
     setInput('');
