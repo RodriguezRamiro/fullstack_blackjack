@@ -830,6 +830,8 @@ button:disabled {
   animation: popIn var(--animation-speed-normal) ease-out;
 }
 
+
+
 /* --- Pop Animation --- */
 @keyframes popIn {
   0% {
@@ -840,4 +842,24 @@ button:disabled {
     transform: translateX(-60%) scale(1);
     opacity: 1;
   }
+}
+
+
+/* footer */
+.footer {
+  width: 100%;
+  padding: 10px 20px;
+  background-color: var(--footer-bg, #111);
+  color: var(--footer-text, #ccc);
+  text-align: center;
+  font-size: 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #333;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+
 }

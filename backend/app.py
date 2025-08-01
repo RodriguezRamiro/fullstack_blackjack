@@ -740,20 +740,25 @@ def emit_game_state(room, table_id, requesting_sid=None):
         emit("game_state", state_to_emit, room=table_id, skip_sid=requesting_sid)
     else:
         # If no specific requesting_sid, emit the default (all-public/hidden) view to the whole room
-        emit("game_state", state_to_emit, room=table_id)
+        socketio.emit("game_state", state_to_emit, room=table_id)
 
 
 @socketio.on("disconnect")
-def handle_disconnect():
+def handle_disconnect(sid):
     sid = request.sid
     for table_id, table in rooms.items():
         players = table.get('players', {})
-        for pid in player in list(players.items()):
+        for pid, player in list(players.items()):
             if player.get('sid') == sid:
                 print(f"Player {pid} disconnected from table {table_id}")
                 del players[pid]
                 break
-        send_game_state(table_id)
+        emit_game_state(table, table_id)
+
+    if not players:
+        print(f"All players left. Removing room {table_id}")
+        del rooms[table_id]
+
 
     tables_to_delete = []
     for table_id, room in list(game_rooms.items()):

@@ -14,6 +14,7 @@ import BlackjackGame from './components/blackjack';
 import GlobalChat from './components/globalchat';
 import Navbar from './components/navbar';
 import UsernamePrompt from './components/usernameprompt';
+import Footer from './components/Footer';
 
 function Lobby({ playerId, username }) {
   const navigate = useNavigate();
@@ -113,7 +114,9 @@ function App() {
   return (
     <Router>
       <AppRoutes playerId={playerId} username={username} />
+      <Footer />
     </Router>
+
   );
 }
 
