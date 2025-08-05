@@ -48,11 +48,18 @@ export default function BlackjackGame({ username, playerId }) {
     socket.on('game_state', (state) => {
       setGameState(state);
       console.log("Players in room:", Object.keys(state?.players || {}));
+
       const player = state?.players?.[playerIdStr];
       setPlayerCards(player ? player.hand : []);
       setDealerCards(state.dealer?.hand || []);
-      setPlayerTurn(player?.status === 'playing');
+
+      // New Turn
+      const isMyTurn = state.current_turn === playerIdStr;
+      setPlayerTurn(isMyTurn);
+
       setGameOver(state.game_over);
+
+      console.log(`recieved game state. its ${state.current_turn}'s turn. is it your turn?`, isMyTurn);
     });
 
     return () => {
@@ -155,10 +162,12 @@ export default function BlackjackGame({ username, playerId }) {
   };
 
   const hit = () => {
+    setPlayerTurn(false); // locks out multiple hits
     socket.emit('hit', { tableId, playerId: playerIdStr });
   };
 
   const stay = () => {
+    setPlayerTurn(false)  // locks out multiple hits
     socket.emit('stay', { tableId, playerId: playerIdStr });
   };
 

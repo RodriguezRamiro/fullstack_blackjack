@@ -2,6 +2,7 @@
 
 import React from 'react';
 import dealerImage from '../assets/icons8-croupier-96 (2).png';
+import { cardBack } from '../assets/assets';
 
 export default function DealerHand({ cards = [], reveal = true }) {
   const calculateHandValue = (cards) => {
@@ -36,7 +37,9 @@ export default function DealerHand({ cards = [], reveal = true }) {
     : cards.map((card, idx) =>
         idx === 0
           ? {
-              image: '/card-back.png',
+
+              ...card,
+              image: cardBack,
               code: 'Hidden',
               rank: 'Hidden',
             }
@@ -58,7 +61,7 @@ export default function DealerHand({ cards = [], reveal = true }) {
             <img
             key={card.code !== 'Hidden' ? `${card.code}-${idx}` : `hidden-${idx}`}
             src={card.image}
-            alt={card.value === 'Hidden' ? 'Facedown card' : `Card ${card.rank} of ${card.suit}`}
+            alt={card.code === 'Hidden' ? 'Facedown card' : `Card ${card.rank} of ${card.suit}`}
             className="card-img"
             />
           ))

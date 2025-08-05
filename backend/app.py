@@ -56,7 +56,7 @@ def create_deck():
     return [
         {
             "suit": suits_map.get(card["suit"], card["suit"]),
-            "rank": rank_map.get(card["value"], card["value"]) if card["value"] != "0" else "10",
+            "rank": rank_map.get(card["value"], card["value"]),
             "image": card["image"],
             "code": card["code"] # Include card code for unique keys in frontend if needed
         }
@@ -178,9 +178,9 @@ def start_game():
             p.setdefault("bet", 0)
             p.setdefault("chips", 1000) # Initialize chips if not already present
 
-    room["started"] = False
-    room["game_over"] = True
-    room["current_turn"] = None
+    room["started"] = True              # Game is now running
+    room["game_over"] = False           # Not over yet
+    room["current_turn"] = None         # Will be set after dealing
 
     # Reset hands and scores for all players and dealer
     for pid in room["players"]:
@@ -235,10 +235,10 @@ def start_game():
         print(f"[ERROR] Failed to calculate dealer score after initial deal: {e}")
         return jsonify({"error": "Failed to calculate dealer score."}), 500
 
-    # Set the first player's turn (simple example, you might need a more robust turn management)
+    # Set the first player's turn
     if room["players"]:
-        room["current_turn"] = next(iter(room["players"])) # First player in the dict
-
+        room["current_turn"] = list(room["players"].keys())[0] # First player in the dict
+        print(f"Initial turn set to {room['current_turn']} in room {table_id}")
     emit_game_state(room, table_id)
 
     print(f"Game started for table {table_id}.")
@@ -439,11 +439,15 @@ def handle_hit(data):
         return
 
     if len(room["deck"]) == 0:
+        room["deck"].extend(create_deck())
+        random.shuffle(room["deck"])
         print(f"Deck empty for room {table_id}, creating new deck.")
+
         try:
-            new_deck = create_deck()
-            room["deck"].extend(new_deck) # Use extend to add all elements
-            random.shuffle(room["deck"])
+            card = room["deck"].pop()
+            player["hand"].append(card)
+            player["score"] = calculate_score(player["hand"])
+
         except Exception as e:
             print(f"[ERROR] Failed to replenish deck during hit action for room {table_id}: {e}")
             emit("error", {"message": "Failed to replenish deck. Please try again."}, to=request.sid)
@@ -469,6 +473,7 @@ def handle_hit(data):
         # Advance turn after bust
         advance_turn(room, table_id)
     else:
+        player["status"] = "stay"
         emit_game_state(room, table_id) # Update state after successful hit
 
 @socketio.on("stay")
@@ -571,7 +576,17 @@ def dealer_plays(room, table_id):
             return
 
     print(f"Dealer finished with score: {dealer['score']} in room {table_id}.")
+    # Set game_over before resolving
+    room["game_over"] = True
+
+    # Resolve winners and update player states
     resolve_game(table_id)
+
+    # Emit updated game state to all players
+    emit_game_state(room, table_id)
+
+    # Optional: trigger game_over client event for UI feedback
+    socketio.emit("game_over", {"message": "Game over. Dealer has finished."}, room=table_id)
 
 
 def resolve_game(table_id):
