@@ -701,7 +701,7 @@ def emit_game_state(room, table_id, requesting_sid=None):
 
     # Prepare hidden card placeholder object
     hidden_card_placeholder = {
-        "image": "/card-back.png",  # Ensure this path matches your frontend asset
+        "image": "cardBack",  # Ensure this path matches your frontend asset
         "code": "HIDDEN_CARD",      # Unique code for hidden card
         "rank": "HIDDEN",
         "suit": "HIDDEN"
@@ -743,7 +743,8 @@ def emit_game_state(room, table_id, requesting_sid=None):
         "dealer": dealer_hand_for_frontend,
         "deckCount": len(room.get("deck", [])),
         "game_over": room.get("game_over", False),
-        "current_turn": room.get("current_turn") # Send current turn player_id
+        "current_turn": room.get("current_turn"), # Send current turn player_id
+        "reveal_dealer_hand": room.get("reveal_dealer_hand", room.get("game_over", False))
     }
 
     # Emit to the requesting_sid (if any) with their specific view
@@ -818,7 +819,7 @@ def public_dealer_hand(dealer, game_over):
 
     # Define the hidden card placeholder object
     hidden_card_placeholder = {
-        "image": "/card-back.png",  # Ensure this path matches your frontend asset
+        "image": "cardBack",  # Ensure this path matches your frontend asset
         "code": "HIDDEN_CARD",      # Unique code for hidden card
         "rank": "HIDDEN",
         "suit": "HIDDEN"
@@ -858,10 +859,17 @@ def handle_reset_game(data):
             player['hand'] = []
             player['bet'] = 0
             player['result'] = None
+
+        # ensure dealer is a dic and reset only the hand
+        if "dealer" not in room:
+            room["dealer"] = {}
         room["dealer_hand"] = []
+
         room["turn_index"] = 0
         room["game_over"] = False
         room["deck"] = get_new_deck()
+        room["reveal_dealer_hand"] = False
+
         send_game_state(table_id)
 
 

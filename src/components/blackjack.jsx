@@ -20,6 +20,7 @@ export default function BlackjackGame({ username, playerId }) {
 
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
+  const [dealerReveal, setDealerReveal] = useState(false)
   const [playerTurn, setPlayerTurn] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState(null);
@@ -52,6 +53,12 @@ export default function BlackjackGame({ username, playerId }) {
       const player = state?.players?.[playerIdStr];
       setPlayerCards(player ? player.hand : []);
       setDealerCards(state.dealer?.hand || []);
+
+
+      // reveal dealer hand prop
+      if (typeof state.reveal_dealer_hand !== undefined) {
+        setDealerReveal(state.reveal_dealer_hand);
+      }
 
       // New Turn
       const isMyTurn = state.current_turn === playerIdStr;
@@ -270,7 +277,10 @@ export default function BlackjackGame({ username, playerId }) {
                   )}
                 </div>
 
-                <DealerHand cards={dealerCards} />
+                <DealerHand
+                cards={gameState?.dealer?.hand || []}
+                reveal={gameState?.reveal_dealer_hand}
+                />
 
                 <Controls
                   onDeal={startGame}

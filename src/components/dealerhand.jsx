@@ -32,19 +32,9 @@ export default function DealerHand({ cards = [], reveal = true }) {
     return total;
   };
 
-  const displayCards = reveal
-    ? cards
-    : cards.map((card, idx) =>
-        idx === 0
-          ? {
-
-              ...card,
-              image: cardBack,
-              code: 'Hidden',
-              rank: 'Hidden',
-            }
-          : card
-      );
+  const displayCards = cards.map(card =>
+    card.image === 'cardBack' ? { ...card, image: cardBack } : card
+    );
 
   return (
     <div className="dealer-area">
