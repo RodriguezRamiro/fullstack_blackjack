@@ -1,6 +1,15 @@
+// src/components/PlayerSeat.jsx
 import React, { useState } from 'react';
+import { cardBack } from '../assets/assets';
 
-const PlayerSeat = ({ player, isCurrent, onSendMessage }) => {
+const PlayerSeat = ({
+  player,
+  players,
+  isCurrent,
+  currentPlayerId,
+  onSendMessage,
+  revealHands
+}) => {
   const [input, setInput] = useState('');
 
   if (!player) return null;
@@ -16,30 +25,53 @@ const PlayerSeat = ({ player, isCurrent, onSendMessage }) => {
     if (e.key === 'Enter') handleSend();
   };
 
-  return (
-    <div className={`player-seat ${isCurrent ? 'current-turn' : ''}`}>
-      <div className="avatar">
-        <span className="avatar-circle">{player.username[0].toUpperCase()}</span>
-        <span className="username">{player.username}</span>
-      </div>
+  const renderHand = (p) => {
+    const shouldReveal = p.playerId === currentPlayerId || revealHands;
+    return (
       <div className="hand">
-        {player.hand.map((card, idx) => (
-          <img key={idx} src={card.image} alt={`${card.rank} of ${card.suit}`} className="card-img player-card" />
+        {p.hand.map((card, idx) => (
+          <img
+            key={idx}
+            src={shouldReveal ? card.image || cardBack : cardBack}
+            alt={
+              shouldReveal
+                ? `${card.rank || 'Hidden'} of ${card.suit || 'Hidden'}`
+                : 'Hidden card'
+            }
+            className="card-img player-card"
+          />
         ))}
       </div>
-      {player.chatBubble && (
-        <div className="chat-bubble">{player.chatBubble}</div>
-      )}
+    );
+  };
 
-      {/* Only show chat input for current player (or if you want, for self) */}
+  const renderPlayer = (p) => (
+    <div key={p.playerId} className="player-hand-group">
+      <div className="avatar">
+        <span className="avatar-circle">{p.username[0].toUpperCase()}</span>
+        <span className="username">{p.username}</span>
+      </div>
+      {renderHand(p)}
+      {p.chatBubble && <div className="chat-bubble">{p.chatBubble}</div>}
+    </div>
+  );
+
+  return (
+    <div className={`player-seat ${isCurrent ? 'current-turn' : ''}`}>
+      {Array.isArray(players) && players.length > 0
+        ? players.map(renderPlayer) // Multi-player mode
+        : renderPlayer(player) // Single-player mode
+      }
+
+      {/* Optional Chat Input for Current Player */}
       {isCurrent && (
-        <div className="seat-chat-input">
+        <div className="chat-input">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Say something..."
+            onKeyPress={handleKeyPress}
+            placeholder="Type a message..."
           />
           <button onClick={handleSend}>Send</button>
         </div>

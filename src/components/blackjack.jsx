@@ -311,6 +311,7 @@ export default function BlackjackGame({ username, playerId }) {
                       : []
                   }
                   currentPlayerId={playerIdStr}
+                  revealHands={dealerReveal}
                   onSendMessage={sendMessage}
                 />
               </div>

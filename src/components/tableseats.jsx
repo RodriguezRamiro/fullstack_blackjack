@@ -1,17 +1,18 @@
 // src/components/TableSeats.jsx
 
 import React, { useEffect } from 'react';
-import PlayerSeat from './playerseat';
+import PlayerSeat from './PlayerSeat';
 import '../styles/blackjackgame.css';
 
-const TableSeats = ({ players, currentPlayerId, onSendMessage}) => {
+const TableSeats = ({ players, currentPlayerId, onSendMessage, revealHands = false }) => {
   const count = players.length;
 
-  // Debug: Check for duplicate or missing player IDs
+  // Debug: check for duplicate or missing IDs
   useEffect(() => {
     const ids = players.map(p => p.playerId);
     const missingIds = ids.filter(id => !id);
     const uniqueIds = new Set(ids);
+
     if (missingIds.length > 0) {
       console.warn('Some players are missing playerId:', players);
     }
@@ -24,11 +25,7 @@ const TableSeats = ({ players, currentPlayerId, onSendMessage}) => {
     <div className="table-seats-container">
       {players.map((player, idx) => {
         const angle = (360 / count) * idx;
-
-        // Use playerId if available and unique, else fallback to index key
         const key = player.playerId ?? `seat-fallback-${idx}`;
-
-        
 
         return (
           <div
@@ -40,9 +37,9 @@ const TableSeats = ({ players, currentPlayerId, onSendMessage}) => {
             <PlayerSeat
               player={player}
               isCurrent={player.playerId === currentPlayerId}
+              revealHands={revealHands}
               onSendMessage={onSendMessage}
             />
-
           </div>
         );
       })}
