@@ -1,5 +1,4 @@
 // src/components/TableSeats.jsx
-
 import React, { useEffect } from 'react';
 import PlayerSeat from './PlayerSeat';
 import '../styles/blackjackgame.css';
@@ -7,7 +6,7 @@ import '../styles/blackjackgame.css';
 const TableSeats = ({ players, currentPlayerId, onSendMessage, revealHands = false }) => {
   const count = players.length;
 
-  // Debug: check for duplicate or missing IDs
+  // Debugging: detect missing or duplicate player IDs
   useEffect(() => {
     const ids = players.map(p => p.playerId);
     const missingIds = ids.filter(id => !id);
@@ -24,7 +23,7 @@ const TableSeats = ({ players, currentPlayerId, onSendMessage, revealHands = fal
   return (
     <div className="table-seats-container">
       {players.map((player, idx) => {
-        const angle = (360 / count) * idx;
+        const angle = (360 / count) * idx; // even seat spacing
         const key = player.playerId ?? `seat-fallback-${idx}`;
 
         return (

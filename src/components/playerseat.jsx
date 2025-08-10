@@ -2,17 +2,11 @@
 import React, { useState } from 'react';
 import { cardBack } from '../assets/assets';
 
-const PlayerSeat = ({
-  player,
-  players,
-  isCurrent,
-  currentPlayerId,
-  onSendMessage,
-  revealHands
-}) => {
+const PlayerSeat = ({ player, isCurrent, revealHands }) => {
   const [input, setInput] = useState('');
 
-  if (!player) return null;
+  const shouldShowCards = isCurrent || revealHands;
+
 
   const handleSend = () => {
     if (input.trim()) {
@@ -25,45 +19,31 @@ const PlayerSeat = ({
     if (e.key === 'Enter') handleSend();
   };
 
-  const renderHand = (p) => {
-    const shouldReveal = p.playerId === currentPlayerId || revealHands;
-    return (
-      <div className="hand">
-        {p.hand.map((card, idx) => (
-          <img
-            key={idx}
-            src={shouldReveal ? card.image || cardBack : cardBack}
-            alt={
-              shouldReveal
-                ? `${card.rank || 'Hidden'} of ${card.suit || 'Hidden'}`
-                : 'Hidden card'
-            }
-            className="card-img player-card"
-          />
-        ))}
-      </div>
-    );
-  };
-
-  const renderPlayer = (p) => (
-    <div key={p.playerId} className="player-hand-group">
-      <div className="avatar">
-        <span className="avatar-circle">{p.username[0].toUpperCase()}</span>
-        <span className="username">{p.username}</span>
-      </div>
-      {renderHand(p)}
-      {p.chatBubble && <div className="chat-bubble">{p.chatBubble}</div>}
-    </div>
-  );
-
   return (
     <div className={`player-seat ${isCurrent ? 'current-turn' : ''}`}>
-      {Array.isArray(players) && players.length > 0
-        ? players.map(renderPlayer) // Multi-player mode
-        : renderPlayer(player) // Single-player mode
-      }
+      <div className="player-hand-group">
+        <div className="avatar">
+          <span className="avatar-circle">{player.username[0].toUpperCase()}</span>
+          <span className="username">{player.username}</span>
+        </div>
 
-      {/* Optional Chat Input for Current Player */}
+        <div className="hand">
+          {player.hand.map((card, idx) => {
+            const imgSrc = shouldShowCards && card.image ? card.image : cardBack;
+            return (
+              <img
+                key={idx}
+                src={imgSrc}
+                alt={shouldShowCards ? `${card.rank} of ${card.suit}` : 'Hidden card'}
+                className="card-img player-card"
+              />
+            );
+          })}
+        </div>
+
+        {player.chatBubble && <div className="chat-bubble">{player.chatBubble}</div>}
+      </div>
+
       {isCurrent && (
         <div className="chat-input">
           <input

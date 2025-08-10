@@ -412,6 +412,10 @@ button:disabled {
 
 /* --- Player & Dealer Area Layout --- */
 
+.avatar-circle {
+  margin-right: 0.5rem; /* or any suitable spacing */
+}
+
 .player-avatar-name {
   display: flex;
   align-items: center;
