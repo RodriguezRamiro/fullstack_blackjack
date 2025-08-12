@@ -1,6 +1,5 @@
 // src/blackjack.jsx
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../config';
 import socket from '../socket';
@@ -12,92 +11,85 @@ import '../styles/blackjackgame.css';
 export default function BlackjackGame({ username, playerId }) {
   const { tableId } = useParams();
   const navigate = useNavigate();
-
   const playerIdStr = String(playerId);
 
   const [loading, setLoading] = useState(true);
   const [playerCards, setPlayerCards] = useState([]);
   const [dealerCards, setDealerCards] = useState([]);
+  const [opponentCards, setOpponentCards] = useState({});
   const [dealerReveal, setDealerReveal] = useState(false);
   const [playerTurn, setPlayerTurn] = useState(false);
   const [gameOver, setGameOver] = useState(false);
-  const [gameState, setGameState] = useState(null);
+  const [gameState, setGameState] = useState({});
   const [betAmount, setBetAmount] = useState(10);
   const [joined, setJoined] = useState(false);
 
+  /** Handles incoming game state from the server */
+  const handleGameState = useCallback((state) => {
+    console.log('received game_state:', state);
+    setGameState(state);
+
+    const player = state?.players?.[playerIdStr] || null;
+    setPlayerCards(player?.hand || []);
+
+    // Dealer hand
+    if (state.reveal_dealer_hand) {
+      setDealerCards([...(state.dealer?.hand || [])]);
+      setDealerReveal(true);
+    } else {
+      const dealerHidden = (state.dealer?.hand || []).map((card, idx) =>
+        idx === 0 ? card : { code: "BACK", hidden: true }
+      );
+      setDealerCards(dealerHidden);
+      setDealerReveal(false);
+    }
+
+    // Opponent hands
+    const opponents = {};
+    Object.entries(state.players || {}).forEach(([id, p]) => {
+      if (id !== playerIdStr) {
+        opponents[id] = state.reveal_hands
+          ? (p.hand || []).map(card => ({ ...card }))
+          : (p.hand || []).map(() => ({ code: "CARD_BACK", hidden: true }));
+      }
+    });
+    setOpponentCards(opponents);
+
+    // Turn and game over state
+    setPlayerTurn(state.current_turn === playerIdStr);
+    setGameOver(state.game_over);
+
+    setLoading(false);
+  }, [playerIdStr]);
+
+  /** Socket connection + listeners */
   useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to backend via Socket.IO');
-    });
-
-    socket.on('connect_error', (err) => {
-      console.error('Socket connection error:', err);
-    });
-
-    socket.on('disconnect', () => {
-      console.warn('Socket disconnected');
-    });
-
+    socket.on('connect', () => console.log('Connected to backend via Socket.IO'));
+    socket.on('connect_error', err => console.error('Socket connection error:', err));
+    socket.on('disconnect', () => console.warn('Socket disconnected'));
     socket.on('room_not_found', () => {
       alert("Room does not exist.");
       navigate("/");
     });
-
-    socket.on('game_state', (state) => {
-      console.log('received game_state:', state);
-
-      const player = state?.players?.[playerIdStr];
-      if (player) {
-        console.log(`Player hand cards count: ${player.hand?.length || 0}`, player.hand);
-      } else {
-        console.log('Player data not found in game state');
-      }
-
-      console.log('Dealer hand cards count:', state.dealer?.hand?.length || 0, state.dealer?.hand);
-
-      setGameState(state);
-      setLoading(false);
-
-      console.log("Players in room:", Object.keys(state?.players || {}));
-
-      setPlayerCards(player ? player.hand : []);
-      setDealerCards(state.dealer?.hand || []);
-
-      if (state.reveal_dealer_hand !== undefined) {
-      setDealerReveal(state.reveal_dealer_hand);
-  }
-
-      const isMyTurn = state.current_turn === playerIdStr;
-      setPlayerTurn(isMyTurn);
-
-      setGameOver(state.game_over);
-
-      console.log(`received game state. It's ${state.current_turn}'s turn. Is it your turn?`, isMyTurn);
-});
+    socket.on('game_state', handleGameState);
 
     return () => {
       socket.off('connect');
       socket.off('connect_error');
       socket.off('disconnect');
       socket.off('room_not_found');
-      socket.off('game_state');
+      socket.off('game_state', handleGameState);
     };
-  }, [playerIdStr, navigate]);
+  }, [handleGameState, navigate]);
 
+  /** Join table logic */
   useEffect(() => {
     if (!tableId || !playerIdStr || !username || joined) return;
-    console.log("Join condition check:", { tableId, playerIdStr, username, joined });
 
     const doJoin = () => {
-      console.log(">>> Attempting to join with:", {
-        tableId,
-        playerId: playerIdStr,
-        username,
-      });
-
+      console.log(">>> Attempting to join:", { tableId, playerId: playerIdStr, username });
       socket.emit("join", { tableId, playerId: playerIdStr, username });
-
-      socket.emit('chat_message', {
+      socket.emit("chat_message", {
         tableId,
         playerId: playerIdStr,
         message: `Hello from ${username}!`,
@@ -105,78 +97,58 @@ export default function BlackjackGame({ username, playerId }) {
       });
     };
 
-    if (socket.connected) {
-      doJoin();
-    } else {
-      socket.once("connect", doJoin);
-    }
+    if (socket.connected) doJoin();
+    else socket.once("connect", doJoin);
 
-    return () => {
-      socket.off("connect", doJoin);
-    };
+    return () => socket.off("connect", doJoin);
   }, [tableId, playerIdStr, username, joined]);
 
+  /** Room join acknowledgment */
   useEffect(() => {
     const handleJoinedRoom = ({ tableId }) => {
       console.log(`Successfully joined room: ${tableId}`);
       setJoined(true);
     };
-
     socket.on('joined_room', handleJoinedRoom);
-
-    return () => {
-      socket.off('joined_room', handleJoinedRoom);
-    };
+    return () => socket.off('joined_room', handleJoinedRoom);
   }, []);
 
-  useEffect(() => {
-    console.log("Joined:", joined, "GameState:", gameState);
-  }, [joined, gameState]);
-
+  /** Bet placed listener */
   useEffect(() => {
     const handleBetPlaced = ({ playerId, bet }) => {
       console.log(`Player ${playerId} placed a bet of $${bet}`);
     };
-
     socket.on('bet_placed', handleBetPlaced);
-
-    return () => {
-      socket.off('bet_placed', handleBetPlaced);
-    };
+    return () => socket.off('bet_placed', handleBetPlaced);
   }, []);
 
+  /** Game control functions */
   const startGame = async () => {
     if (!tableId || !playerIdStr || !joined) {
-      console.warn("Not ready to start game: missing table ID, player ID or not joined yet.");
+      console.warn("Not ready to start game.");
       return;
     }
-
     try {
-      const response = await fetch(`${BACKEND_URL}/start-game`, {
+      const res = await fetch(`${BACKEND_URL}/start-game`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tableId, playerId: playerIdStr }),
-        credentials: 'include',
       });
-
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      const data = await res.json();
       console.log('Game started at table:', data.tableId);
-    } catch (error) {
-      console.error('Error starting the game:', error);
+    } catch (err) {
+      console.error('Error starting game:', err);
     }
   };
 
   const hit = () => {
-    setPlayerTurn(false); // locks out multiple hits
+    setPlayerTurn(false);
     socket.emit('hit', { tableId, playerId: playerIdStr });
   };
 
   const stay = () => {
-    setPlayerTurn(false); // locks out multiple hits
+    setPlayerTurn(false);
     socket.emit('stay', { tableId, playerId: playerIdStr });
   };
 
@@ -188,65 +160,48 @@ export default function BlackjackGame({ username, playerId }) {
   };
 
   const placeBet = () => {
-    console.log("Placing Bet:", betAmount);
     if (!tableId || !playerIdStr || betAmount < 1) {
       console.error("Invalid bet or missing table/player ID");
       return;
     }
-
-    socket.emit("place_bet", { tableId, playerId: playerIdStr, bet: betAmount }, (ack) => {
-      console.log("Bet acknowledged by server:", ack);
-    });
+    socket.emit("place_bet", { tableId, playerId: playerIdStr, bet: betAmount });
   };
 
   const sendMessage = (msg) => {
-    const data = {
+    socket.emit('chat_message', {
       playerId: playerIdStr,
       username,
+      tableId,
       message: msg,
-    };
-
-    if (tableId) {
-      data.tableId = tableId;
-    }
-    socket.emit('chat_message', data);
+    });
   };
 
+  /** Betting restrictions */
   const numPlayers = gameState?.players ? Object.keys(gameState.players).length : 0;
   const allowBetting = numPlayers >= 2;
 
   useEffect(() => {
-    console.log(`Players in game: ${numPlayers} — Allow betting: ${allowBetting}`);
-  }, [numPlayers, allowBetting]);
-
-  useEffect(() => {
-    if (!allowBetting) {
-      setBetAmount(10);
-    }
+    if (!allowBetting) setBetAmount(10);
   }, [allowBetting]);
 
   const renderResult = () => {
     if (!gameOver) return null;
-    if (!gameState || !gameState.players) return "Game over. Check results!";
-    const player = gameState.players[playerIdStr];
-    if (!player || !player.result) return "Game over. Check results!";
-
+    const player = gameState.players?.[playerIdStr];
+    if (!player?.result) return "Game over. Check results!";
     switch (player.result) {
-      case "win":
-        return "You won! 🎉";
-      case "lose":
-        return "You lost. 😞";
-      case "push":
-        return "Push (tie). 🤝";
-      default:
-        return "Game over. Check results!";
+      case "win": return "You won! 🎉";
+      case "lose": return "You lost. 😞";
+      case "push": return "Push (tie). 🤝";
+      default: return "Game over. Check results!";
     }
   };
 
+  /** Loading state */
   if (loading) {
     return <div className="loading-message">Loading game data...</div>;
   }
 
+  /** Main UI */
   return (
     <div className="game-wrapper">
       {tableId ? (
@@ -280,10 +235,7 @@ export default function BlackjackGame({ username, playerId }) {
                   )}
                 </div>
 
-                <DealerHand
-                  cards={gameState?.dealer?.hand || []}
-                  reveal={gameState?.reveal_dealer_hand}
-                />
+                <DealerHand cards={dealerCards} reveal={dealerReveal} />
 
                 <Controls
                   onDeal={startGame}
@@ -307,9 +259,9 @@ export default function BlackjackGame({ username, playerId }) {
                 <TableSeats
                   players={
                     gameState?.players
-                      ? Object.entries(gameState.players).map(([playerId, playerData]) => ({
-                          playerId,
-                          ...playerData,
+                      ? Object.entries(gameState.players).map(([pid, pData]) => ({
+                          playerId: pid,
+                          ...pData,
                         }))
                       : []
                   }
