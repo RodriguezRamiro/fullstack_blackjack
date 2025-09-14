@@ -1,13 +1,29 @@
 // socket.js
 
+import { io } from "socket.io-client";
 
-import { io } from 'socket.io-client';
-import { BACKEND_URL } from './config';
+// Read from environment variable
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
+if (!BACKEND_URL) {
+  console.error("❌ No BACKEND_URL set in environment!");
+}
 
 const socket = io(BACKEND_URL, {
-  withCredentials: true,
   autoConnect: true,
-  transports: ['websocket'],
+});
+
+// Debug logs
+socket.on("connect", () => {
+  console.log("✅ Connected to server with ID:", socket.id);
+});
+
+socket.on("connect_error", (err) => {
+  console.error("❌ Connection error:", err.message);
+});
+
+socket.on("disconnect", () => {
+  console.log("⚠️ Disconnected from server");
 });
 
 export default socket;
