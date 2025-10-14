@@ -1,3 +1,5 @@
+// /src/app.jsx
+
 import React, { useState } from 'react';
 import {
   BrowserRouter as Router,
@@ -32,7 +34,7 @@ function Lobby({ playerId, username }) {
       }
 
       const data = await res.json();
-      navigate(`/table/${data.tableId}`);
+      navigate(`/table/${data.table_id}`);
     } catch (error) {
       console.error("Error creating table:", error);
     }

@@ -1,4 +1,6 @@
 // src/blackjack.jsx
+
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { BACKEND_URL } from '../config';
@@ -88,9 +90,10 @@ export default function BlackjackGame({ username, playerId }) {
 
     const doJoin = () => {
       console.log(">>> Attempting to join:", { tableId, playerId: playerIdStr, username });
-      socket.emit("join", { tableId, playerId: playerIdStr, username });
+      socket.emit("join", { table_id: tableId, playerId: playerIdStr, username });
+
       socket.emit("chat_message", {
-        tableId,
+        table_id: tableId,
         playerId: playerIdStr,
         message: `Hello from ${username}!`,
         username,
@@ -105,8 +108,12 @@ export default function BlackjackGame({ username, playerId }) {
 
   /** Room join acknowledgment */
   useEffect(() => {
-    const handleJoinedRoom = ({ tableId }) => {
-      console.log(`Successfully joined room: ${tableId}`);
+    const handleJoinedRoom = ( data ) => {
+      if (!data) {
+        console.warn("⚠️ joined_room event received with no data");
+        return;
+      }
+      console.log("✅ Successfully joined room:", data.table_id);
       setJoined(true);
     };
     socket.on('joined_room', handleJoinedRoom);

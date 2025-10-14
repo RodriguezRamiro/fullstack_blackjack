@@ -126,6 +126,7 @@ def create_room():
     table_id = str(uuid.uuid4())
     rooms[table_id] = {
         "players": [],
+        "players_data": {},
         "deck": create_deck(),
         "dealer": {"hand": [], "score": 0},
         "bets": {},
@@ -138,7 +139,7 @@ def create_room():
 @app.route("/start-game", methods=["POST"])
 def start_game():
     data = request.get_json()
-    table_id = data.get("table_id")
+    table_id = data.get("table_id") or data.get("tableId")
     if not table_id or table_id not in rooms:
         return jsonify({"error": "Invalid table"}), 400
     start_game_internal(table_id)
@@ -165,6 +166,8 @@ def on_join(data):
 
     join_room(table_id)
     players[request.sid] = {"username": username, "table_id": table_id}
+    print(f"Player joined: username={username}, sid={request.sid}, table={table_id}")
+
 
     room = rooms.get(table_id)
     if not room:
@@ -176,7 +179,14 @@ def on_join(data):
         room["players"].append(request.sid)
         socketio.emit("chat_message", {"username": "System", "message": f"{username} joined"}, room=table_id)
 
+    emit("joined_room", {"table_id": table_id}, room=request.sid)
+
     emit_game_state(room, table_id)
+
+    # if single-player, auto start immidiatly
+    if len(room["players"]) == 1:
+        socketio.emit("chat_message", {"username": "System", "message": "Single-Player mode: Starting round..."}, room=table_id)
+        start_game_internal(table_id)
 
 @socketio.on("place_bet")
 def place_bet(data):
@@ -293,15 +303,42 @@ def resolve_game(room, table_id):
 
 # Game State Emission
 def emit_game_state(room, table_id):
-    state = {
-        "dealer": {
-            "hand": [room["dealer"]["hand"][0], {"value": "Hidden", "suit": "Hidden"}] if room["game_started"] else room["dealer"]["hand"],
-            "score": "?" if room["game_started"] else calculate_score(room["dealer"]["hand"])
-        },
-        "players": room["players_data"],
-        "turn": room["turn_order"][room["current_turn_index"]] if room["game_started"] else None
-    }
-    socketio.emit("game_state", state, room=table_id)
+
+# Guard defaults so we never KeyError
+    dealer = room.get("dealer", {"hand": [], "score": 0})
+    game_started = room.get("game_started", False)
+    players_data = room.get("players_data", {})
+    turn_order = room.get("turn_order", [])
+    current_index = room.get("current_turn_index", 0)
+
+# Build exposed dealer info (hide second card if game started)
+    dealer_hand = dealer.get("hand", [])
+    if game_started and dealer_hand:
+        dealer_display = [dealer_hand[0], {
+            "value": "hidden", "suit": "Hidden"}]
+        dealer_score = "?"
+    else:
+        dealer_display = dealer_hand
+        dealer_score = calculate_score(dealer_hand) if dealer_hand else 0
+
+# Choose current turn (none when not running)
+        turn = None
+        if game_started and turn_order:
+# Current player username (your state uses username in turn_order )
+            turn = turn_order[current_index] if current_index < len(turn_order) else None
+
+        state = {
+            "dealer": {
+                "hand": dealer_display,
+                "score": dealer_score
+            },
+            "players": players_data,
+            "turn": turn,
+            "reveal_dealer_hand": not game_started,
+            "reveal_hands": not game_started,
+            "game_over": not game_started
+        }
+        socketio.emit("game_state", state, room=table_id)
 
 
 
