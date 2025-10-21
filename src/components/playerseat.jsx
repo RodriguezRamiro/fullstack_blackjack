@@ -2,15 +2,15 @@
 import React, { useState } from 'react';
 import { cardBack } from '../assets/assets';
 
-const PlayerSeat = ({ player, isCurrent, revealHands }) => {
+const PlayerSeat = ({ player, isCurrent, revealHands, onSendMessage }) => {
   const [input, setInput] = useState('');
 
-  const shouldShowCards = isCurrent || revealHands;
+  const shouldShowCards = revealHands || isCurrent;
 
 
   const handleSend = () => {
     if (input.trim()) {
-      onSendMessage(input.trim());
+      onSendMessage?.(input.trim());
       setInput('');
     }
   };
@@ -23,28 +23,45 @@ const PlayerSeat = ({ player, isCurrent, revealHands }) => {
     <div className={`player-seat ${isCurrent ? 'current-turn' : ''}`}>
       <div className="player-hand-group">
         <div className="avatar">
-          <span className="avatar-circle">{player.username[0].toUpperCase()}</span>
-          <span className="username">{player.username}</span>
+          <span className="avatar-circle">
+            {player.username?.[0]?.toUpperCase?.() || '?'}
+            </span>
+          <span className="username">{player.username || 'Player'}</span>
         </div>
 
         <div className="hand">
-          {player.hand.map((card, idx) => {
-            const imgSrc = shouldShowCards && card.image ? card.image : cardBack;
-            return (
-              <img
-                key={idx}
-                src={imgSrc}
-                alt={shouldShowCards ? `${card.rank} of ${card.suit}` : 'Hidden card'}
-                className="card-img player-card"
-              />
-            );
-          })}
+          {player.hand?.length > 0 ? (
+            player.hand.map((card, idx) => {
+              // Determine image source
+              const isHidden = !shouldShowCards;
+              const imgSrc = isHidden
+                ? cardBack
+                : card?.image || `/cards/${card.value}_of_${card.suit}.png`;
+
+              const altText = isHidden
+                ? 'Hidden card'
+                : `Card ${card.value} of ${card.suit}`;
+
+              return (
+                <img
+                  key={`card-${idx}`}
+                  src={imgSrc}
+                  alt={altText}
+                  className="card-img player-card"
+                />
+              );
+            })
+          ) : (
+            <p className="no-cards">No cards yet</p>
+          )}
         </div>
 
-        {player.chatBubble && <div className="chat-bubble">{player.chatBubble}</div>}
+        {player.chatBubble && (
+          <div className="chat-bubble">{player.chatBubble}</div>
+        )}
       </div>
 
-      {isCurrent && (
+{isCurrent && (
         <div className="chat-input">
           <input
             type="text"

@@ -2,9 +2,7 @@
 
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, join_room, leave_room, emit
-from flask_socketio import rooms as socketio_rooms
 from datetime import datetime, timezone
-import threading
 import os
 from flask_cors import CORS
 import random
@@ -65,7 +63,7 @@ def create_deck():
     try:
         resp = requests.get(DECK_API_URL, timeout=5)
         resp.raise_for_status()
-        deck_id = resp.json()["deck_id"]
+        deck_id = resp.json().get("deck_id")
         return {"deck_id": deck_id, "cards": []}
     except Exception as e:
         print(f"Deck API failed, using local deck: {e}")
@@ -75,12 +73,13 @@ def create_deck():
         random.shuffle(cards)
         return {"deck_id": None, "cards": cards}
 
+
 def draw_card(table_id):
     """Draw a card from deck (API or local)."""
     room = rooms[table_id]
     deck = room["deck"]
 
-    if deck["deck_id"]:  # API deck
+    if deck.get("deck_id"):  # API deck
         try:
             resp = requests.get(
                 f"https://deckofcardsapi.com/api/deck/{deck['deck_id']}/draw/?count=1",
@@ -88,14 +87,14 @@ def draw_card(table_id):
             )
             resp.raise_for_status()
             data = resp.json()
-            if data["success"] and data["cards"]:
+            if data.get("success") and data.get("cards"):
                 card = data["cards"][0]
                 return {"value": card["value"], "suit": card["suit"]}
         except Exception as e:
             print(f"API draw failed, fallback: {e}")
 
     # Fallback/local
-    if not deck["cards"]:
+    if not deck.get("cards"):
         deck.update(create_deck())
     return deck["cards"].pop()
 
@@ -120,13 +119,12 @@ def emit_error(message, room=None):
 
 
 # Routes
-
 @app.route("/create-room", methods=["POST"])
 def create_room():
     table_id = str(uuid.uuid4())
     rooms[table_id] = {
-        "players": [],
-        "players_data": {},
+        "players": {},         # keyed by player_id -> { sid, username }
+        "players_data": {},    # keyed by player_id -> per-round data
         "deck": create_deck(),
         "dealer": {"hand": [], "score": 0},
         "bets": {},
@@ -138,78 +136,125 @@ def create_room():
 
 @app.route("/start-game", methods=["POST"])
 def start_game():
-    data = request.get_json()
+    data = request.get_json() or {}
     table_id = data.get("table_id") or data.get("tableId")
     if not table_id or table_id not in rooms:
         return jsonify({"error": "Invalid table"}), 400
+
+    room = rooms[table_id]
+    if not room.get("players"):
+        return jsonify({"error": "No players in room"}), 400
+
     start_game_internal(table_id)
-    return jsonify({"message": "Game started"})
+
+    return jsonify({
+        "message": "Game started",
+        "table_id": table_id         # send table_id to the frontend
+    })
+
 
 # Socket Events
 
+# Socket Events
 @socketio.on("connect")
 def on_connect():
     print("🔌 Client connected:", request.sid)
 
 @socketio.on("disconnect")
 def on_disconnect():
-    print("❌ Client disconnected:", request.sid)
-
-
+    sid = request.sid
+    print("❌ Client disconnected:", sid)
+    p = players.pop(sid, None)
+    if p:
+        table_id = p.get("table_id")
+        player_id = p.get("player_id")
+        if table_id in rooms:
+            room = rooms[table_id]
+            room.get("players", {}).pop(player_id, None)
+            room.get("players_data", {}).pop(player_id, None)
+            emit_game_state(room, table_id)
 
 @socketio.on("join")
 def on_join(data):
     username = data.get("username")
     table_id = data.get("table_id")
+    player_id = data.get("playerId") or str(uuid.uuid4())
+
     if not username or not table_id:
         return emit_error("Invalid join request")
 
+
+    # Create room if needed
+    if table_id not in rooms:
+        rooms[table_id] = {
+            "players": {},
+            "players_data": {},
+            "deck": create_deck(),
+            "dealer": {"hand": [], "score": 0},
+            "bets": {},
+            "game_started": False,
+            "turn_order": [],
+            "current_turn_index": 0,
+        }
+
+    room = rooms[table_id]
     join_room(table_id)
-    players[request.sid] = {"username": username, "table_id": table_id}
-    print(f"Player joined: username={username}, sid={request.sid}, table={table_id}")
 
+    # register globally by socket sid
+    players[request.sid] = {"username": username, "player_id": player_id, "table_id": table_id}
 
-    room = rooms.get(table_id)
-    if not room:
-        return emit_error("Table does not exist")
+    # register in room keyed by player_id (so frontend can index by playerId)
+    room["players"][player_id] = {"sid": request.sid, "username": username}
 
-    if room["game_started"]:
-        socketio.emit("chat_message", {"username": "System", "message": f"{username} is observing"}, room=table_id)
-    else:
-        room["players"].append(request.sid)
-        socketio.emit("chat_message", {"username": "System", "message": f"{username} joined"}, room=table_id)
+    # ensure players_data has entry for this player (useful pre-game)
+    if player_id not in room.get("players_data", {}):
+        room["players_data"][player_id] = {"username": username, "hand": [], "score": 0, "bet": 0}
+        # add to turn order only if not present
+        if player_id not in room.get("turn_order", []):
+            room["turn_order"].append(player_id)
 
+    print(f"[JOIN] {username} joined table {table_id} with player_id={player_id}")
+    print("[DEBUG] Room snapshot before emit_game_state:")
+    print(f"  players: {list(room['players'].keys())}")
+    print(f"  players_data: {list(room.get('players_data', {}).keys())}")
+
+    # notify table
+    socketio.emit("chat_message", {"username": "System", "message": f"{username} joined the table."}, room=table_id)
     emit("joined_room", {"table_id": table_id}, room=request.sid)
 
+    # emit current game state so frontend updates
     emit_game_state(room, table_id)
 
-    # if single-player, auto start immidiatly
+    # auto-start single-player for quick testing
     if len(room["players"]) == 1:
         socketio.emit("chat_message", {"username": "System", "message": "Single-Player mode: Starting round..."}, room=table_id)
         start_game_internal(table_id)
+
 
 @socketio.on("place_bet")
 def place_bet(data):
     table_id = data.get("table_id")
     bet = data.get("bet")
     player = players.get(request.sid)
-    if not table_id or not bet or not player:
+    if not table_id or bet is None or not player:
         return emit_error("Invalid bet")
 
     room = rooms.get(table_id)
     if not room:
         return emit_error("Table not found")
 
-    if player["username"] in room["bets"]:
+    # use username in bets map for readability
+    if player["username"] in room.get("bets", {}):
         return emit_error("Bet already placed", room=table_id)
 
-    room["bets"][player["username"]] = bet
+    room.setdefault("bets", {})[player["username"]] = bet
     socketio.emit("chat_message", {"username": "System", "message": f"{player['username']} bet {bet}"}, room=table_id)
 
-    if len(room["bets"]) == len(room["players"]):
+    if len(room["bets"]) == len(room.get("players", {})):
         start_game_internal(table_id)
     else:
         emit_game_state(room, table_id)
+
 
 
 @socketio.on("hit")
@@ -219,18 +264,28 @@ def hit(data):
     if not room:
         return emit_error("Invalid table")
 
-    player = players.get(request.sid)
-    if not player or player["username"] != room["turn_order"][room["current_turn_index"]]:
-        return emit_error("Not your turn")
+    ply = players.get(request.sid)
+    if not ply:
+        return emit_error("Player not found")
+    player_key = ply.get("player_id") or request.sid
 
-    player_obj = room["players_data"][player["username"]]
+    # current turn is stored as player_key (player_id)
+    current_turn_key = room.get("turn_order", [None])[room.get("current_turn_index", 0)] if room.get("turn_order") else None
+    if player_key != current_turn_key:
+        return emit_error("Not your turn", room=table_id)
+
+    player_obj = room.get("players_data", {}).get(player_key)
+    if not player_obj:
+        return emit_error("Player data missing", room=table_id)
+
     card = draw_card(table_id)
     player_obj["hand"].append(card)
     player_obj["score"] = calculate_score(player_obj["hand"])
 
     if player_obj["score"] > 21:
-        socketio.emit("chat_message", {"username": "System", "message": f"{player['username']} busts!"}, room=table_id)
+        socketio.emit("chat_message", {"username": "System", "message": f"{ply['username']} busts!"}, room=table_id)
         advance_turn(room, table_id)
+
     emit_game_state(room, table_id)
 
 @socketio.on("stay")
@@ -240,18 +295,22 @@ def stay(data):
     if not room:
         return emit_error("Invalid table")
 
-    player = players.get(request.sid)
-    if not player or player["username"] != room["turn_order"][room["current_turn_index"]]:
-        return emit_error("Not your turn")
+    ply = players.get(request.sid)
+    if not ply:
+        return emit_error("Player not found", room=table_id)
+    player_key = ply.get("player_id") or request.sid
 
-    socketio.emit("chat_message", {"username": "System", "message": f"{player['username']} stays"}, room=table_id)
+    current_turn_key = room.get("turn_order", [None])[room.get("current_turn_index", 0)] if room.get("turn_order") else None
+    if player_key != current_turn_key:
+        return emit_error("Not your turn", room=table_id)
+
+
+    socketio.emit("chat_message", {"username": "System", "message": f"{ply['username']} stays"}, room=table_id)
     advance_turn(room, table_id)
     emit_game_state(room, table_id)
 
 
-
 # Game Logic
-
 def start_game_internal(table_id):
     room = rooms[table_id]
     room.update({
@@ -261,33 +320,49 @@ def start_game_internal(table_id):
         "players_data": {},
     })
 
-    for sid in room["players"]:
-        username = players[sid]["username"]
-        hand = [draw_card(table_id), draw_card(table_id)]
-        room["players_data"][username] = {"hand": hand, "score": calculate_score(hand)}
+    # Deal to each joined player (room["players"] keyed by player_id)
+    for player_id, pdata in list(room.get("players", {}).items()):
+        sid = pdata.get("sid")
+        username = pdata.get("username")
+        if not sid or not username:
+            print(f"[WARN] start_game_internal: missing sid/username for player_id={player_id}")
+            continue
 
-    room["turn_order"] = [players[sid]["username"] for sid in room["players"]]
+        hand = [draw_card(table_id), draw_card(table_id)]
+        room["players_data"][player_id] = {
+            "username": username,
+            "hand": hand,
+            "score": calculate_score(hand),
+            "bet": room.get("bets", {}).get(username, 0),
+        }
+
+    # Turn_order should be list of player_keys (player_id")
+    room["turn_order"] = [pid for pid in room.get("players", {}).keys()]
     room["current_turn_index"] = 0
+
+    print(f"[DEBUG] Starting game for table {table_id}. Players: {list(room['players'].keys())}")
     emit_game_state(room, table_id)
+
 
 def advance_turn(room, table_id):
     room["current_turn_index"] += 1
-    if room["current_turn_index"] >= len(room["turn_order"]):
+    if room["current_turn_index"] >= len(room.get("turn_order", [])):
         dealer_plays(room, table_id)
     else:
         emit_game_state(room, table_id)
 
 def dealer_plays(room, table_id):
-    dealer = room["dealer"]
+    dealer = room.get("dealer", {"hand": [], "score": 0})
     while calculate_score(dealer["hand"]) < 17:
         dealer["hand"].append(draw_card(table_id))
     dealer["score"] = calculate_score(dealer["hand"])
     resolve_game(room, table_id)
 
+
 def resolve_game(room, table_id):
     dealer_score = room["dealer"]["score"]
     results = {}
-    for username, pdata in room["players_data"].items():
+    for username, pdata in room.get("players_data", {}).items():
         score = pdata["score"]
         if score > 21:
             results[username] = "Lose (bust)"
@@ -301,10 +376,12 @@ def resolve_game(room, table_id):
     room["game_started"] = False
 
 
+
 # Game State Emission
 def emit_game_state(room, table_id):
+    """Emit full game state to all clients in the table."""
 
-# Guard defaults so we never KeyError
+# Defensive Defaults
     dealer = room.get("dealer", {"hand": [], "score": 0})
     game_started = room.get("game_started", False)
     players_data = room.get("players_data", {})
@@ -314,32 +391,28 @@ def emit_game_state(room, table_id):
 # Build exposed dealer info (hide second card if game started)
     dealer_hand = dealer.get("hand", [])
     if game_started and dealer_hand:
-        dealer_display = [dealer_hand[0], {
-            "value": "hidden", "suit": "Hidden"}]
+        dealer_display = [dealer_hand[0], {"value": "hidden", "suit": "Hidden"}]
         dealer_score = "?"
     else:
         dealer_display = dealer_hand
         dealer_score = calculate_score(dealer_hand) if dealer_hand else 0
 
-# Choose current turn (none when not running)
-        turn = None
-        if game_started and turn_order:
-# Current player username (your state uses username in turn_order )
-            turn = turn_order[current_index] if current_index < len(turn_order) else None
+# Turn logic
+    turn = None
+    if game_started and turn_order:
+        turn = turn_order[current_index] if current_index < len(turn_order) else None
 
-        state = {
-            "dealer": {
-                "hand": dealer_display,
-                "score": dealer_score
-            },
-            "players": players_data,
-            "turn": turn,
-            "reveal_dealer_hand": not game_started,
-            "reveal_hands": not game_started,
-            "game_over": not game_started
-        }
-        socketio.emit("game_state", state, room=table_id)
+    state = {
+        "dealer": {"hand": dealer_display, "score": dealer_score},
+        "players": players_data,
+        "turn": turn,
+        "reveal_dealer_hand": not game_started,
+        "reveal_hands": not game_started,
+        "game_over": not game_started,
+    }
 
+    print(f"[DEBUG] Emitting game_state for table {table_id}: players={list(players_data.keys())}")
+    socketio.emit("game_state", state, room=table_id)
 
 
 # Run
