@@ -2,16 +2,16 @@
 
 import React from 'react';
 import dealerImage from '../assets/icons8-croupier-96 (2).png';
-import { cardBack } from '../assets/assets';
+import cardBack from '../assets/cardBack.png';
 
 export default function DealerHand({ cards = [], reveal = true }) {
   const calculateHandValue = (cards) => {
     let total = 0;
     let aceCount = 0;
 
-    cards.forEach(card => {
+    cards.forEach((card) => {
+      if (!card?.value) return;
       const value = card?.value?.toUpperCase?.();
-      if (!value) return;
 
       if (['K', 'Q', 'J'].includes(value)) total += 10;
        else if (value === 'A') {
@@ -28,6 +28,33 @@ export default function DealerHand({ cards = [], reveal = true }) {
     return total;
   };
 
+  //Render each card
+  const renderCard = (card, idx) => {
+    //Determine if card should be hidden
+    const isHidden =
+    (!reveal && idx === 1) || // hide dealers 2nd card when reveal = false
+    card?.value === 'hidden' ||
+    card?.suit === 'hidden';
+
+    // Use API image if available, otherwise fallback
+    const imgSrc = isHidden
+    ? cardBack
+    : card.image || `/cards/${card.value}_of_${card.suit}.png`;
+
+    const altText = isHidden
+    ? 'Facedown card'
+    : `Card ${card.value} of ${card.suit}`
+
+    return (
+      <img
+      key={`dealer-${idx}`}
+      src={imgSrc}
+      alt={altText}
+      className="card-img"
+      />
+    );
+  };
+
   return (
     <div className="dealer-area">
       <img
@@ -39,31 +66,7 @@ export default function DealerHand({ cards = [], reveal = true }) {
 
       <div className="card-row">
         {cards.length > 0 ? (
-          cards.map((card, idx) => {
-            // Determine if card should be hidden
-            const isHidden =
-              (!reveal && idx === 1) || // hide dealer’s 2nd card when reveal = false
-              card?.value === "hidden" ||
-              card?.suit === "hidden";
-
-            // Pick image source
-            const imgSrc = isHidden
-              ? cardBack
-              : card?.image || `/cards/${card.value}_of_${card.suit}.png`;
-
-              const altText = isHidden
-              ? "Facedown card"
-              : `Card ${card.value} of ${card.suit}`;
-
-            return (
-              <img
-                key={`dealer-${idx}`}
-                src={imgSrc}
-                alt={altText}
-                className='card-img'
-                />
-            );
-          })
+          cards.map(renderCard)
         ) : (
           <p>No cards dealt yet</p>
         )}

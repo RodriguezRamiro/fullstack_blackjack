@@ -30,45 +30,49 @@ export default function TableSeats({ players = [], currentPlayerId, revealHands,
 
   // Sort the current player is always las (bottom of table)
   const sorted = [
-  ...players.filter(p => p.playerId !== currentPlayerId),
-  ...players.filter(p => p.playerId === currentPlayerId),
+  ...playerList.filter(p => p.playerId !== currentPlayerId),
+  ...playerList.filter(p => p.playerId === currentPlayerId),
 ];
 
-  const count = players.length;
+  const count = sorted.length;
 
   // Debugging: detect missing or duplicate player IDs
   useEffect(() => {
-    const ids = players.map(p => p.playerId);
+    const ids = sorted.map(p => p.playerId);
     const missingIds = ids.filter(id => !id);
     const uniqueIds = new Set(ids);
 
-    if (missingIds.length > 0) {
-      console.warn('Some players are missing playerId:', playerList);
-    }
-    if (uniqueIds.size !== ids.length) {
-      console.warn('Duplicate playerId values detected:', ids);
-    }
-  }, [playerList, sorted]);
+    if (missingIds.length > 0)
+    console.warn('Missing playerId:', sorted);
+    if (uniqueIds.size !== ids.length)
+    console.warn('Duplicate playerId:', ids);
+  }, [sorted]);
+
 
   return (
-    <div className="table-seats-container">
-      <div className="table-seats">
-        {sorted.map((p, idx) => (
-          <div
-            key={p.playerId ?? `seat-${idx}`}
-            className="seat-wrapper"
-            data-angle={(360 / count) * idx}
-            style={{ '--seat-angle': `${(360 / count) * idx}deg` }}
-          >
-            <PlayerSeat
-              player={p}
-              isCurrent={p.playerId === currentPlayerId}
-              revealHands={revealHands}
-              onSendMessage={onSendMessage}
-              seatIndex={idx}
-            />
-          </div>
-        ))}
+    <div className="blackjack-right">
+      <div className="table-seats-container">
+        <div className="table-seats">
+          {sorted.map((p, idx) => {
+            const angle = (360 / count) * idx;
+            return (
+              <div
+                key={p.playerId ?? `seat-${idx}`}
+                className="seat-wrapper"
+                data-angle={angle}
+                style={{ '--seat-angle': `${angle}deg` }}
+              >
+                <PlayerSeat
+                  player={p}
+                  isCurrent={p.playerId === currentPlayerId}
+                  revealHands={revealHands}
+                  onSendMessage={onSendMessage}
+                  seatIndex={idx}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

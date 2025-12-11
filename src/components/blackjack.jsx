@@ -232,6 +232,7 @@ export default function BlackjackGame({ username, playerId }) {
         <div className="table-seats-layout">
           <div className="blackjack-table">
             <div className="blackjack-content">
+              
               {/* LEFT SIDE — Game Area */}
               <div className="blackjack-left">
                 <div className="betting-controls">

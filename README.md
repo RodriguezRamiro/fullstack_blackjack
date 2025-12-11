@@ -19,13 +19,31 @@ A multiplayer Blackjack game with real-time gameplay and chat, built with React 
 fullstack_blackjack_vite/
 ├── backend/ # Flask backend (API + Socket.IO server)
 │ ├── app.py # Main Flask app with Socket.IO events
+│ ├── deck_api.py
 │ ├── requirements.txt # Python dependencies
+│ ├──test_blackjack.py
+│ ├──test_scoring.py
 ├── public/ # Public assets for frontend
 ├── src/ # React frontend source code
+│ ├── assets/ cardback + icons
 │ ├── components/ # React components (game, chat, controls, etc.)
+│ │ ├── blackjack.jsx
+│ │ ├── controls.jsx
+│ │ ├── dealerhand.jsx
+│ │ ├── Footer.jsx
+│ │ ├── globalchat.jsx
+│ │ ├── Modal.jsx
+│ │ ├── navbar.jsx
+│ │ ├── playerhand.jsx
+│ │ ├── playerseat.jsx
+│ │ ├── roomchat.jsx
+│ │ ├── tableseats.jsx
+│ │ ├── usernameprompt.jsx
 │ ├── socket.js # Socket.IO client setup
 │ ├── main.jsx # React app entry point
 │ ├── styles/ # CSS styles
+├── .env # vite backend url port 5000
+├── .env.production # vite backend url on render
 ├── package.json # Frontend dependencies and scripts
 ├── vite.config.js # Vite config
 ├── README.md # This file
