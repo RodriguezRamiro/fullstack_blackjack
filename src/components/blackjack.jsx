@@ -44,7 +44,13 @@ export default function BlackjackGame({ username, playerId }) {
       setDealerReveal(true);
     } else {
       const dealerHidden = (state.dealer?.hand || []).map((card, idx) =>
-        idx === 0 ? card : { code: "BACK", hidden: true }
+        idx === 0
+        ? card
+        : { value: "hidden",
+            suit: "hidden",
+            image: null,
+            hidden: true
+          }
       );
       setDealerCards(dealerHidden);
       setDealerReveal(false);
@@ -56,7 +62,12 @@ export default function BlackjackGame({ username, playerId }) {
       if (id !== playerIdStr) {
         opponents[id] = state.reveal_hands
           ? (p.hand || []).map(card => ({ ...card }))
-          : (p.hand || []).map(() => ({ code: "CARD_BACK", hidden: true }));
+          : (p.hand || []).map(() => ({
+            value: "hidden",
+            suit: "hidden",
+            image: null,
+            hidden: true,
+          }));
       }
     });
     setOpponentCards(opponents);
@@ -232,7 +243,7 @@ export default function BlackjackGame({ username, playerId }) {
         <div className="table-seats-layout">
           <div className="blackjack-table">
             <div className="blackjack-content">
-              
+
               {/* LEFT SIDE — Game Area */}
               <div className="blackjack-left">
                 <div className="betting-controls">

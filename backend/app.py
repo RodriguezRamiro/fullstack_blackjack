@@ -59,7 +59,8 @@ DECK_API_URL = "https://deckofcardsapi.com/api/deck/new/shuffle/?deck_count=6"
 # Utility Functions
 
 def create_deck():
-    """Fetch or build a shuffled deck."""
+    """Fetch or build a shuffled deck. When using local fallback, include 'code' and 'image'
+    fields so frontend can render an external/static image for each card."""
     try:
         resp = requests.get(DECK_API_URL, timeout=5)
         resp.raise_for_status()
@@ -69,16 +70,42 @@ def create_deck():
         print(f"Deck API failed, using local deck: {e}")
         suits = ["HEARTS", "DIAMONDS", "CLUBS", "SPADES"]
         ranks = list(CARD_VALUES.keys())
-        cards = [{"value": r, "suit": s} for r in ranks for s in suits] * 6
+
+        # map long rank / short code used by deckofcards api static images
+        rank_code_map = {
+            "ACE": "A", "JACK": "J", "QUEEN": "Q", "KING": "K",
+            # numeric ranks keep their number; use "10" for tens
+            "10": "10", "2": "2", "3": "3", "4": "4", "5": "5",
+            "6": "6", "7": "7", "8": "8", "9": "9"
+        }
+
+        suit_code_map = {
+            "HEARTS": "H",
+            "DIAMONDS": "D",
+            "CLUBS": "C",
+            "SPADES": "S"
+        }
+
+        cards = []
+        for r in ranks:
+            for s in suits:
+                rank_code = rank_code_map.get(r, r)
+                suit_code = suit_code_map.get(s, s[0])
+                code = f"{rank_code}{suit_code}"
+                image = f"httpa://deckofcardsapi.com/static/img.{code}.png"
+                cards.append({"value": r, "suit": s, "code": code, "image": image})
+        # for multiplayer 6 pairity decks in DECK_API_URL;
+        cards = cards * 6
         random.shuffle(cards)
         return {"deck_id": None, "cards": cards}
 
 
 def draw_card(table_id):
-    """Draw a card from deck (API or local)."""
+    """Draw a card from deck (API or local). Returns dict containing value,suit,code,image."""
     room = rooms[table_id]
     deck = room["deck"]
 
+    # If we have an API deck_id, prefer drawing from the API and return the image + code.
     if deck.get("deck_id"):  # API deck
         try:
             resp = requests.get(
@@ -88,14 +115,22 @@ def draw_card(table_id):
             resp.raise_for_status()
             data = resp.json()
             if data.get("success") and data.get("cards"):
-                card = data["cards"][0]
-                return {"value": card["value"], "suit": card["suit"]}
+                api_card = data["cards"][0]
+                # Provide consistent fields for frontend
+                return {
+                    "value": api_card.get("value"),
+                    "suit": api_card.get("suit"),
+                    "code": api_card.get("code"),
+                    "image": api_card.get("image") or (api_card.get("images") or {}).get("png")
+                    }
         except Exception as e:
             print(f"API draw failed, fallback: {e}")
 
     # Fallback/local
     if not deck.get("cards"):
         deck.update(create_deck())
+
+    # Local card objects already include value,suit,code,image per create_deck()
     return deck["cards"].pop()
 
 def calculate_score(hand):
@@ -391,7 +426,10 @@ def emit_game_state(room, table_id):
 # Build exposed dealer info (hide second card if game started)
     dealer_hand = dealer.get("hand", [])
     if game_started and dealer_hand:
-        dealer_display = [dealer_hand[0], {"value": "hidden", "suit": "Hidden"}]
+        dealer_display = [
+        dealer_hand[0],
+        {"value": "hidden", "suit": "hidden", "code": "BACK", "image": None, "hidden": True}
+    ]
         dealer_score = "?"
     else:
         dealer_display = dealer_hand
