@@ -294,34 +294,55 @@ def place_bet(data):
 
 @socketio.on("hit")
 def hit(data):
-    table_id = data.get("table_id")
-    room = rooms.get(table_id)
-    if not room:
-        return emit_error("Invalid table")
+    try:
+        table_id = data.get("table_id")
+        room = rooms.get(table_id)
+        if not room:
+            return emit_error("Invalid table")
 
-    ply = players.get(request.sid)
-    if not ply:
-        return emit_error("Player not found")
-    player_key = ply.get("player_id") or request.sid
+        ply = players.get(request.sid)
+        if not ply:
+            return emit_error("Player not found")
 
-    # current turn is stored as player_key (player_id)
-    current_turn_key = room.get("turn_order", [None])[room.get("current_turn_index", 0)] if room.get("turn_order") else None
-    if player_key != current_turn_key:
-        return emit_error("Not your turn", room=table_id)
+        player_key = ply.get("player_id") or request.sid
 
-    player_obj = room.get("players_data", {}).get(player_key)
-    if not player_obj:
-        return emit_error("Player data missing", room=table_id)
+        # current turn is stored as player_key (player_id)
+        current_turn_key = room.get("turn_order", [None])[room.get("current_turn_index", 0)] if room.get("turn_order") else None
+        if player_key != current_turn_key:
+            return emit_error("Not your turn", room=table_id)
 
-    card = draw_card(table_id)
-    player_obj["hand"].append(card)
-    player_obj["score"] = calculate_score(player_obj["hand"])
+        player_obj = room.get("players_data", {}).get(player_key)
+        if not player_obj:
+            return emit_error("Player data missing", room=table_id)
 
-    if player_obj["score"] > 21:
-        socketio.emit("chat_message", {"username": "System", "message": f"{ply['username']} busts!"}, room=table_id)
-        advance_turn(room, table_id)
+        # draw card safely
+        card = draw_card(table_id)
+        if not card:
+            return emmit_error("Failed to draw a card", room=table_id)
 
-    emit_game_state(room, table_id)
+        player_obj["hand"].append(card)
+
+        # score safely
+        try:
+            player_obj["score"] = calculate_score(player_obj["hand"])
+        except Exception as e:
+            return emit_error(f"Score calc error: {str(e)}", room=table_id)
+
+        # bust condition
+        if player_obj["score"] > 21:
+            socketio.emit(
+                "chat_message",
+                {"username": "System", "message": f"{ply['username']} busts!"},
+                room=table_id
+                )
+            advance_turn(room, table_id)
+
+        # emit new game state
+        emit_game_state(room, table_id)
+
+    except Exception as e:
+        # catches hidden server error that freezes UI
+        return emit_error(f"Server error in HIt: {str(e)}", room=data.get("table_id"))
 
 @socketio.on("stay")
 def stay(data):
@@ -387,11 +408,26 @@ def advance_turn(room, table_id):
         emit_game_state(room, table_id)
 
 def dealer_plays(room, table_id):
-    dealer = room.get("dealer", {"hand": [], "score": 0})
+    dealer = room["dealer"]
+
+    #dealer hits until 17+
     while calculate_score(dealer["hand"]) < 17:
-        dealer["hand"].append(draw_card(table_id))
+        card = draw_card(table_id)
+        dealer["hand"].append(card)
+
+    # set final score
     dealer["score"] = calculate_score(dealer["hand"])
-    resolve_game(room, table_id)
+
+    # mark the game as finished
+    room["game_started"] = False
+
+    # force reveal hands
+    room["reveal_dealer_hand"] = True
+    room["reveal_hands"] = True
+    room["game_over"] = True
+
+    # emit new state
+    emit_game_state(room, table_id)
 
 
 def resolve_game(room, table_id):
