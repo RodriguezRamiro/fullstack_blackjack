@@ -5,7 +5,8 @@ import '../styles/blackjackgame.css';
 const Footer = () => {
     return (
         <footer className="footer" aria-label="Footer">
-      <p>© 2025 Rodriguez Tech Solutions </p>
+          <h3 className="footer-logo">RodriguezTech Solutions</h3>
+          <p>&copy; {new Date().getFullYear()} RodriguezTech. All rights reserved.</p>
       <p>
         <small>
         All rights reserved - Version 1.0.0 —{' '}
