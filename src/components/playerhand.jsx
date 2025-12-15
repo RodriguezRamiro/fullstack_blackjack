@@ -1,8 +1,8 @@
-// src/playerhand.jsx
+//frontend/src/components/playerhand.jsx
 
 import React from 'react';
 import playerImage from '../assets/icons8-croupier-64 (1).png';
-import { cardBack } from '../assets/assets';
+
 
 export default function PlayerHand({ cards = [], username = "Player", reveal = true }) {
 
