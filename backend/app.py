@@ -294,6 +294,7 @@ def place_bet(data):
 
 @socketio.on("hit")
 def hit(data):
+    print("HIT EVENT RECEIVED", data)
     try:
         table_id = data.get("table_id")
         room = rooms.get(table_id)
@@ -304,12 +305,20 @@ def hit(data):
         if not ply:
             return emit_error("Player not found")
 
-        player_key = ply.get("player_id") or request.sid
+        player_key = request.sid
+
+
 
         # current turn is stored as player_key (player_id)
         current_turn_key = room.get("turn_order", [None])[room.get("current_turn_index", 0)] if room.get("turn_order") else None
         if player_key != current_turn_key:
             return emit_error("Not your turn", room=table_id)
+
+        print("DEBUG HIT TURN CHECK")
+        print("request.sid:", request.sid)
+        print("player_key:", player_key)
+        print("current_turn_key:", current_turn_key)
+        print("turn_order:", room.get("turn_order"))
 
         player_obj = room.get("players_data", {}).get(player_key)
         if not player_obj:
@@ -318,7 +327,7 @@ def hit(data):
         # draw card safely
         card = draw_card(table_id)
         if not card:
-            return emmit_error("Failed to draw a card", room=table_id)
+            return emit_error("Failed to draw a card", room=table_id)
 
         player_obj["hand"].append(card)
 

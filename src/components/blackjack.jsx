@@ -178,11 +178,12 @@ export default function BlackjackGame({ username, playerId }) {
   };
 
   const hit = () => {
-    socket.emit('hit', { tableId, playerId: playerIdStr });
+    console.log('Hit Clicked')
+    socket.emit('hit', { table_id: tableId, playerId: playerIdStr });
   };
 
   const stay = () => {
-    socket.emit('stay', { tableId, playerId: playerIdStr });
+    socket.emit('stay', { table_id: tableId, playerId: playerIdStr });
   };
 
   const leaveTable = () => {
