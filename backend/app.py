@@ -188,7 +188,7 @@ def start_game():
     })
 
 
-# Socket Events
+
 
 # Socket Events
 @socketio.on("connect")
@@ -305,13 +305,33 @@ def hit(data):
         if not ply:
             return emit_error("Player not found")
 
-        player_key = request.sid
+        player_key = ply.get("player_id")
+
+        print("IDENTITY CHECK")
+        print("request.sid:", request.sid)
+        print("player_key (from socket):", player_key)
+        print("playerId (from client):", data.get("playerId"))
+
+
+        if player_key not in room["players_data"]:
+            print("[ERROR] Invalid playerId in HIT:", player_key)
+            return
+
 
 
 
         # current turn is stored as player_key (player_id)
         current_turn_key = room.get("turn_order", [None])[room.get("current_turn_index", 0)] if room.get("turn_order") else None
-        if player_key != current_turn_key:
+        turn_order = room.get("turn_order", [])
+
+        print("TURN DEBUG")
+        print("player_key:", player_key)
+        print("turn_order:", room.get("turn_order"))
+        print("current_turn_index:", room.get("current_turn_index"))
+        print("current_turn_key:", current_turn_key)
+
+        # Allow single-player tables
+        if len(turn_order) > 1 and player_key != current_turn_key:
             return emit_error("Not your turn", room=table_id)
 
         print("DEBUG HIT TURN CHECK")
@@ -378,6 +398,11 @@ def stay(data):
 # Game Logic
 def start_game_internal(table_id):
     room = rooms[table_id]
+    # Turn_order should be list of player_keys (player_id")
+    room["turn_order"] = [pid for pid in room.get("players", {}).keys()]
+    room["current_turn_index"] = 0
+
+    print("[DEBUG] Turn order initialized:", room["turn_order"])
     room.update({
         "game_started": True,
         "bets": {},
@@ -401,9 +426,6 @@ def start_game_internal(table_id):
             "bet": room.get("bets", {}).get(username, 0),
         }
 
-    # Turn_order should be list of player_keys (player_id")
-    room["turn_order"] = [pid for pid in room.get("players", {}).keys()]
-    room["current_turn_index"] = 0
 
     print(f"[DEBUG] Starting game for table {table_id}. Players: {list(room['players'].keys())}")
     emit_game_state(room, table_id)
