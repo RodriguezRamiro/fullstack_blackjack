@@ -1,0 +1,21 @@
+/* //src/styles/buttons.css */
+
+button {
+    margin: 0.5rem;
+    padding: 0.7rem 1.5rem;
+
+    font-size: 1rem;
+    font-weight: bold;
+
+    background-color: #f4f4f4;
+    border: 2px solid #333;
+    border-radius: 8px;
+
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #ddd;
+    transform: scale(1.05);
+  }

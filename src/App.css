@@ -1,64 +1,9 @@
-/* app.css */
-
-body, html, #root, .App {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: 'Georgia', 'Times New Roman', Times, serif;
-
-  background:
-  linear-gradient(
-    135deg,
-    #0b1d0b,
-    #145214,
-    #1a1a1a,
-    #2a2a2a,
-    #bfa83c,
-    #0e3f4d
-  ),
-  url('https://www.transparenttextures.com/patterns/fabric-of-squares.png');
-background-blend-mode: overlay;
-background-size: 500% 500%, cover;
-animation: casino-gradient-rotate 50s ease-in-out infinite;
+/* //src/app.css */
 
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-@keyframes casino-gradient-rotate {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-
+/* If App needs any unique overrides, they go here */
+/* Otherwise, this file can stay intentionally small */
 
 .App {
-  text-align: center;
-  color: aliceblue;
-}
-
-button {
-  margin: 0.5rem;
-  padding: 0.7rem 1.5rem;
-  font-size: 1rem;
-  font-weight: bold;
-  background-color: #f4f4f4;
-  border: 2px solid #333;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-button:hover{
-  background-color: #ddd;
-  transform: scale(1.05);
+  position: relative;
 }

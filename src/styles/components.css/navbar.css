@@ -1,0 +1,93 @@
+/* //fullstack_blackjack_vite/src/styles/components.css/navbar.css */
+
+
+/* Navbar Styles */
+.navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--navbar-height);
+    background: linear-gradient(135deg, #111, #1c1c1c, #222); /* This defines the background */
+    color: #f9f9f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    background-size: 300% 300%;
+    animation: navbar-glow 12s ease infinite;
+  }
+
+  @keyframes navbar-glow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .navbar-logo {
+    font-size: 1.5rem;
+    color: var(--color-gold-accent); /* Using variable for consistency with #ffd700 */
+    text-decoration: none;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin: 0;
+    padding: 0.6rem 1.5rem;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-white); /* This color will be masked by background-clip */
+
+    background: linear-gradient(
+      135deg,
+      var(--gradient-header-start),
+      var(--gradient-header-mid),
+      var(--gradient-header-end)
+    );
+    background-size: 300% 300%;
+    animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    border: none;
+    border-radius: var(--border-radius-large);
+    z-index: 10;
+    transition: all 0.3s ease;
+  }
+
+  .navbar-logo:hover {
+    transform: scale(1.05);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  }
+
+  .navbar-right {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .navbar-user,
+  .navbar-table {
+    font-size: 0.95rem;
+    color: var(--color-medium-text);
+  }
+
+  .navbar-button{
+    background-color: var(--color-primary-green);
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--border-radius-medium);
+    color: var(--color-white);
+    cursor: pointer;
+    margin-left: 12px;
+    font-size: 0.9rem;
+    letter-spacing: 0.03rem;
+    transition: background-color var(--animation-speed-normal) ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); 
+  }
+
+
+  .navbar-button:hover {
+    background-color: #d32f2f; /* Specific red for hover */
+  }

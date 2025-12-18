@@ -41,7 +41,7 @@ fullstack_blackjack_vite/
 │ │ ├── usernameprompt.jsx
 │ ├── socket.js # Socket.IO client setup
 │ ├── main.jsx # React app entry point
-│ ├── styles/ # CSS styles
+│ ├── styles/ blackjackgame.css
 ├── .env # vite backend url port 5000
 ├── .env.production # vite backend url on render
 ├── package.json # Frontend dependencies and scripts
