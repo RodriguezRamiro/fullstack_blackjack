@@ -1,9 +1,25 @@
 /* //src/app.css */
 
+/* Base */
+@import "./base/variables.css";
+@import "./base/layout.css";
+
+/* Components */
+@import "./components/navbar.css";
+@import "./components/modal.css";
 
 /* If App needs any unique overrides, they go here */
 /* Otherwise, this file can stay intentionally small */
 
 .App {
   position: relative;
+}
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
 }

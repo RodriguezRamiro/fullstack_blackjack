@@ -1,0 +1,48 @@
+
+/* --- Game Over Message & Popups --- */
+.game-over-message {
+    position: fixed;
+    top: 5px;
+    left: 35%;
+    transform: translateX(-50%);
+    background-color: rgba(255, 0, 0, 0.85);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--color-white);
+    z-index: 1100;
+    text-align: center;
+    text-shadow: 0 0 6px var(--color-black);
+    animation: popIn var(--animation-speed-slow) ease-out;
+  }
+
+  .game-result-popup {
+    position: fixed;
+    top: 70px; /* centered navbar */
+    left: 10%;
+    transform: translateX(-20%);
+    background: rgba(255, 215, 0, 0.95);
+    color: var(--color-black);
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 1px 24px;
+    border-radius: 10px;
+    box-shadow: var(--box-shadow-medium);
+    z-index: 1100;
+    animation: popIn var(--animation-speed-normal) ease-out;
+  }
+
+
+
+  /* --- Pop Animation --- */
+  @keyframes popIn {
+    0% {
+      transform: translateX(-10%) scale(0.7); /* Include translateX for consistency with initial state */
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(-60%) scale(1);
+      opacity: 1;
+    }
+  }

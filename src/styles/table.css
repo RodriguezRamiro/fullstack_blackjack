@@ -1,0 +1,152 @@
+/* //fullstack_blackjack_vite/src/styles/table.css */
+
+
+/* Blackjack Table Styling */
+.blackjack-table {
+    background: linear-gradient(
+      135deg,
+      var(--gradient-green-teal-start),
+      var(--gradient-green-teal-mid),
+      var(--gradient-green-teal-end)
+    );
+    background-size: 300% 300%;
+    animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
+
+    width: 70vw;
+    max-width: 1200px;
+    min-width: 300px;
+
+    height: 35vw;
+    min-height: 300px;
+
+    margin: 5px auto 0; /* space under navbar */
+    border-radius: 0 0 200px 200px;
+    box-shadow: var(--box-shadow-heavy);
+    padding: 10px 20px 150px;
+
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: auto;
+  }
+
+  /* --- Gradient Background Animation --- */
+  @keyframes gradient-rotate {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Table Id & copy Button Row */
+  .table-id-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: var(--color-light-text);
+  }
+
+  /* Stylized Table ID Display */
+  .table-id {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--border-radius-small);
+    font-family: monospace;
+    color: var(--color-gold-accent);
+    border: 1px solid var(--color-gold-accent);
+    box-shadow: var(--box-shadow-light);
+  }
+
+  /* Copy button */
+  .copy-button {
+    background-color: var(--color-gold-accent);
+    color: var(--color-black);
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--border-radius-pill);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: background-color var(--animation-speed-fast) ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Example: Add a subtle shadow */
+  }
+
+  .copy-button:hover {
+    background-color: #e6c200;
+  }
+
+
+  .table-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Table controls Styles */
+  .table-controls button {
+    background-color: var(--color-dark-text);
+    color: var(--color-gold-accent);
+    border: none; /* Explicitly ensure no border */
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: var(--border-radius-pill);
+    cursor: pointer;
+    transition: background-color var(--animation-speed-fast) ease,
+                transform var(--animation-speed-fast) ease,
+                box-shadow var(--animation-speed-fast) ease; /* Add box-shadow transition */
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.1), 0 4px 6px rgba(0, 0, 0, 0.5); /* Unified shadow */
+    width: auto; /* Allow content to dictate width, or set a specific one */
+    text-align: center;
+  }
+
+  .table-controls button:hover {
+    background-color: var(--color-gray-medium);
+    transform: scale(1.05);
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.2), 0 6px 10px rgba(0, 0, 0, 0.7); /* Enhanced glow on hover */
+  }
+
+
+/* --- Table Seat styles --- */
+.table-seats-container {
+    width: 400px;
+    height: 400px;
+    border-radius: 50%;
+    background-color: transparent;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    right: 0%;
+    bottom: 0;
+    transform: translateY(-10%);
+    z-index: 2;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .seat-wrapper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: rotate(var(--seat-angle)) translate(170px) rotate(cal(-1 * var(--seat-angle)));
+    transform-origin: center center;
+    transition: transform 0.3s ease;
+  }
+
+  .table-seats {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }

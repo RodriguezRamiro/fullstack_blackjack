@@ -1,0 +1,54 @@
+/* //fullstack_blackjack_vite/src/styles/footer.css */
+
+/* footer */
+.footer {
+    width: 100%;
+    padding: 10px 20px;
+    background-color: var(--footer-bg, #111);
+    color: var(--footer-text, #ccc);
+    text-align: center;
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #333;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+
+  }
+
+  .footer-logo {
+    font-size: 0.5rem;
+    color: var(--color-gold-accent);
+    text-decoration: none;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--color-white); /* This color will be masked by background-clip */
+
+    background: linear-gradient(
+      135deg,
+      var(--gradient-header-start),
+      var(--gradient-header-mid),
+      var(--gradient-header-end)
+    );
+    background-size: 300% 300%;
+    animation: gradient-rotate var(--animation-gradient-duration) linear infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    border: none;
+    border-radius: var(--border-radius-large);
+    z-index: 10;
+    transition: all 0.3s ease;
+  }
+
+  .footer-logo:hover {
+    transform: scale(1.05);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+  }

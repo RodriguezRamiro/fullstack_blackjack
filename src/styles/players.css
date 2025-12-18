@@ -1,0 +1,33 @@
+/* //fullstack_blackjack_vite/src/styles/player.css */
+/* --- Player & Dealer Area Layout --- */
+
+.avatar-circle {
+    margin-right: 0.5rem; /* or any suitable spacing */
+  }
+
+  .player-avatar-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 0.5rem;
+    color: var(--color-white);
+  }
+
+  .player-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+  }
+
+  .player-seat .hand {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    background-color: rgba(0, 100, 0, 0.2);
+    padding: 1rem;
+    border-radius: var(--border-radius-large);
+    margin-top: 6px;
+    min-height: 80px;
+    margin-bottom: 25rem;
+    box-shadow: var(--box-shadow-light); /* Added missing semicolon */
+  }

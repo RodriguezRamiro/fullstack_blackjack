@@ -1,0 +1,60 @@
+/* //fullstack_blackjack_vite/src/styles/base/layout.css */
+
+.App {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    color: aliceblue;
+  }
+
+
+/* General Page Styles */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--color-primary-green);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+
+
+/* -- BlackJack Game two-column layout -- */
+.blackjack-content {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1rem 1rem;
+  box-sizing: border-box;
+}
+
+.blackjack-left {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.blackjack-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background: var(--chat-bg);
+  border: 1px solid var(--chat-border);
+  border-radius: var(--border-radius-large);
+  padding: 1rem;
+  max-height: 600px;
+  overflow-y: auto;
+  box-shadow: var(--box-shadow-medium);
+  position: relative;
+}

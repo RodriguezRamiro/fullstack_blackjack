@@ -14,39 +14,81 @@ A multiplayer Blackjack game with real-time gameplay and chat, built with React 
 
 ---
 
+## Styling Architecture
+
+Styles are organized by responsibility rather than component coupling:
+
+- `variables.css` — design tokens
+- `layout.css` — structural layout
+- `buttons.css` — reusable UI elements
+- Feature styles (`cards`, `chat`, `players`, etc.) scoped by domain
+
+This keeps styles scalable and maintainable as the application grows.
+
+
 ## Project Structure
 
 fullstack_blackjack_vite/
-├── backend/ # Flask backend (API + Socket.IO server)
-│ ├── app.py # Main Flask app with Socket.IO events
-│ ├── deck_api.py
-│ ├── requirements.txt # Python dependencies
-│ ├──test_blackjack.py
-│ ├──test_scoring.py
-├── public/ # Public assets for frontend
-├── src/ # React frontend source code
-│ ├── assets/ cardback + icons
-│ ├── components/ # React components (game, chat, controls, etc.)
-│ │ ├── blackjack.jsx
-│ │ ├── controls.jsx
-│ │ ├── dealerhand.jsx
-│ │ ├── Footer.jsx
-│ │ ├── globalchat.jsx
-│ │ ├── Modal.jsx
-│ │ ├── navbar.jsx
-│ │ ├── playerhand.jsx
-│ │ ├── playerseat.jsx
-│ │ ├── roomchat.jsx
-│ │ ├── tableseats.jsx
-│ │ ├── usernameprompt.jsx
-│ ├── socket.js # Socket.IO client setup
-│ ├── main.jsx # React app entry point
-│ ├── styles/ blackjackgame.css
-├── .env # vite backend url port 5000
-├── .env.production # vite backend url on render
-├── package.json # Frontend dependencies and scripts
-├── vite.config.js # Vite config
-├── README.md # This file
+│
+├── backend/
+│   ├── app.py
+│   ├── deck_api.py
+│   ├── requirements.txt
+│   ├── test_blackjack.py
+│   └── test_scoring.py
+│
+├── public/
+│
+├── src/
+│   ├── assets/
+│   │   └── cardback.png
+│   │
+│   ├── components/
+│   │   ├── blackjack.jsx
+│   │   ├── controls.jsx
+│   │   ├── dealerhand.jsx
+│   │   ├── footer.jsx
+│   │   ├── globalchat.jsx
+│   │   ├── modal.jsx
+│   │   ├── navbar.jsx
+│   │   ├── playerhand.jsx
+│   │   ├── playerseat.jsx
+│   │   ├── roomchat.jsx
+│   │   ├── tableseats.jsx
+│   │   └── usernameprompt.jsx
+│   │
+│   ├── styles/
+│   │   ├── index.css       # resets & globals
+│   │   ├── variables.css   # colors, shadows, animation timings
+│   │   ├── base.css        # body background, root layout
+│   │   ├── layout.css      # page & column layout
+│   │   ├── buttons.css
+│   │   ├── lobby.css
+│   │   ├── table.css
+│   │   ├── players.css
+│   │   ├── cards.css
+│   │   ├── chat.css
+│   │   ├── navbar.css
+│   │   ├── footer.css
+│   │   ├── modal.css
+│   │   └── overlays.css
+│   │
+│   ├── app.jsx
+│   ├── app.css
+│   ├── main.jsx
+│   ├── socket.js
+│   └── config.js
+│
+├── .env
+├── .env.production
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package.json
+├── package-lock.json
+├── vite.config.js
+└── README.md
+
 
 
 ---

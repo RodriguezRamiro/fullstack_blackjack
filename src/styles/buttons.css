@@ -1,4 +1,4 @@
-/* //src/styles/buttons.css */
+/* //fullstack_blackjack_vite/src/styles/buttons.css */
 
 button {
     margin: 0.5rem;
@@ -18,4 +18,67 @@ button {
   button:hover {
     background-color: #ddd;
     transform: scale(1.05);
+  }
+
+
+  /* General Button Styles - Apply common properties here, specific buttons will override */
+  button {
+    background-color: var(--color-dark-text);       /* Dark background for contrast */
+    color: var(--color-gold-accent);               /* Golden text = elegant casino style */
+    border: none; /* Make sure buttons have no default border */
+    padding: 12px 20px;                            /* Comfortable spacing */
+    font-size: 1em;                                 /* Standard readable size */
+    border-radius: var(--border-radius-large);     /* Smooth corners */
+    margin: 10px;                                   /* Space around each button */
+    cursor: pointer;
+    transition:                                     /* Smooth transition for hover/focus */
+      background-color var(--animation-speed-normal) ease,
+      box-shadow var(--animation-speed-normal) ease,
+      transform var(--animation-speed-normal) ease; /* Add transform for consistency */
+    width: 140px;                                   /* Fixed width — consistent size */
+    text-align: center;
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.1), 0 4px 6px rgba(0, 0, 0, 0.5); /* Unified shadow */
+  }
+
+  button:hover {
+    background-color: var(--color-gray-medium);     /* Slightly lighter for hover */
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.2), 0 6px 10px rgba(0, 0, 0, 0.7);       /* Enhanced glow on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
+  }
+
+  button:disabled {
+    background-color: #b8d8b8;                      /* Washed out green = clearly disabled */
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none; /* No lift when disabled */
+  }
+
+
+
+
+/* Buttons */
+button {
+    background-color: var(--color-dark-text);
+    color: var(--color-gold-accent);
+    border: none;
+    padding: 12px 20px;
+    font-size: 1em;
+    border-radius: var(--border-radius-large);
+    margin: 10px;
+    cursor: pointer;
+    transition: background-color var(--animation-speed-normal) ease, box-shadow var(--animation-speed-normal) ease;
+    width: 140px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  button:hover {
+    background-color: var(--color-gray-medium);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.7);
+  }
+
+  button:disabled {
+    background-color: #b8d8b8; /* Specific disabled color */
+    cursor: not-allowed;
+    box-shadow: none;
   }
