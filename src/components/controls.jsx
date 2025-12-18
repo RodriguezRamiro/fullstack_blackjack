@@ -1,7 +1,8 @@
-// Controls.jsx
-
+/* //fullstack_blackjack_vite/src/components/controls.jsx */
 
 import React from 'react';
+import "../styles/buttons.css";
+
 
 export default function Controls({
   onDeal,

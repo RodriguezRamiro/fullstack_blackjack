@@ -1,4 +1,4 @@
-// src/blackjack.jsx
+/* //fullstack_blackjack_vite/src/components/blackjack.jsx */
 
 
 import React, { useEffect, useState, useCallback, useRef} from 'react';
@@ -8,7 +8,13 @@ import socket from '../socket';
 import DealerHand from './dealerhand';
 import Controls from './controls';
 import TableSeats from './tableseats';
-import '../styles/blackjackgame.css';
+
+import "../styles/lobby.css";
+import "../styles/table.css";
+import "../styles/cards.css";
+import "../styles/buttons.css";
+
+
 
 export default function BlackjackGame({ username, playerId }) {
   const { tableId } = useParams();

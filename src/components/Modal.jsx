@@ -1,7 +1,9 @@
-// src/components/Modal.jsx
+/* //fullstack_blackjack_vite/src/components/modal.jsx */
 
 import React from 'react'
-import '../styles/blackjackgame.css';
+import "../styles/modal.css";
+import "../styles/overlays.css";
+
 
 
 export default function Modal({ isOpen, title, message, onConfirm, onCancel }) {

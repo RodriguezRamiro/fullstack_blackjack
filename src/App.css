@@ -1,12 +1,12 @@
 /* //src/app.css */
 
 /* Base */
-@import "./base/variables.css";
-@import "./base/layout.css";
+@import "./styles/variables.css";
+@import "./styles/layout.css";
 
 /* Components */
-@import "./components/navbar.css";
-@import "./components/modal.css";
+@import "./styles/navbar.css";
+@import "./styles/modal.css";
 
 /* If App needs any unique overrides, they go here */
 /* Otherwise, this file can stay intentionally small */

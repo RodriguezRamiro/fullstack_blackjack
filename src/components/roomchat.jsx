@@ -1,7 +1,8 @@
-//src/components/roomchat.jsx
+/* //fullstack_blackjack_vite/src/components/roomchat.jsx */
 
 import React, { useEffect, useState, useRef } from 'react';
-import '../styles/blackjackgame.css';
+import "../styles/chat.css";
+
 
 
 // Simple avatar function, replace or extend as needed

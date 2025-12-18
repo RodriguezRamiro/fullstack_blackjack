@@ -1,7 +1,8 @@
-//src/components/GlobalChat.jxs (chat before joining a room)
+/* //fullstack_blackjack_vite/src/components/globalchat.jsx */
 
 import React, { useEffect, useState, useRef } from "react";
-import socket from "../socket"; //
+import socket from "../socket";
+import "../styles/chat.css";
 
 
 function GlobalChat({ username }) {

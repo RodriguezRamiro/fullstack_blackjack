@@ -1,6 +1,8 @@
+/* //fullstack_blackjack_vite/src/components/Footer.jsx */
+
 import React from 'react';
 
-import '../styles/blackjackgame.css';
+import '../styles/footer.css';
 
 const Footer = () => {
     return (

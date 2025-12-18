@@ -1,9 +1,9 @@
-// src/components/TableSeats.jsx
+/* //fullstack_blackjack_vite/src/components/tableseats.jsx */
 
 
 import React, { useEffect, useMemo } from 'react';
 import PlayerSeat from './PlayerSeat';
-import '../styles/blackjackgame.css';
+import '../styles/table.css';
 
 
 /**TableSeats - visually arranges all players around the table.

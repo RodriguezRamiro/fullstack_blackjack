@@ -1,6 +1,8 @@
-// src/dealerhand.jsx
+/* //fullstack_blackjack_vite/src/components/dealerhand.jsx */
 
 import React from 'react';
+import "../styles/cards.css";
+import "../styles/players.css";
 import dealerImage from '../assets/icons8-croupier-96 (2).png';
 import cardBack from '../assets/cardBack.png';
 

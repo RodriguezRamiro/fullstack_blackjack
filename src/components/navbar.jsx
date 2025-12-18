@@ -1,7 +1,9 @@
+/* //fullstack_blackjack_vite/src/components/navbar.jsx */
+
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import '../styles/blackjackgame.css';
-import Modal from './Modal';
+import '../styles/navbar.css';
+import Modal from './modal';
 
 export default function Navbar({ tableId, playerId, socket, username }) {
   const navigate = useNavigate();

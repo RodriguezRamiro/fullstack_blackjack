@@ -1,4 +1,8 @@
-/* index.css */
+/* //fullstack_blackjack_vite/src/index.css*/
+
+@import "./styles/variables.css";
+@import "./styles/base.css";
+
 
 /* Basic reset */
 *,

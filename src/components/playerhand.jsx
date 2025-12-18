@@ -1,6 +1,8 @@
-//frontend/src/components/playerhand.jsx
+/*  //fullstack_blackjack_vite/src/components/playerhand.jsx */
 
 import React from 'react';
+import "../styles/cards.css";
+import "../styles/players.css";
 import playerImage from '../assets/icons8-croupier-64 (1).png';
 
 

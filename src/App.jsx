@@ -1,4 +1,4 @@
-// /src/app.jsx
+/* //fullstack_blackjack_vite/src/App.jsx */
 
 import React, { useState } from 'react';
 import {
@@ -16,7 +16,13 @@ import BlackjackGame from './components/blackjack';
 import GlobalChat from './components/globalchat';
 import Navbar from './components/navbar';
 import UsernamePrompt from './components/usernameprompt';
-import Footer from './components/Footer';
+import Footer from './components/footer';
+
+import './app.css';
+import './styles/layout.css';
+import './styles/navbar.css';
+import './styles/footer.css';
+
 
 function Lobby({ playerId, username }) {
   const navigate = useNavigate();
