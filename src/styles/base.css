@@ -1,4 +1,12 @@
-/* //src/styles/base.css */
+/* //fullstack_blackjack_vite/src/styles/base.css*/
+
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 
 html,
 body,
@@ -26,6 +34,7 @@ body,
   animation: casino-gradient-rotate 50s ease-in-out infinite;
 }
 
+/* Background animation only */
 @keyframes casino-gradient-rotate {
   0% {
     background-position: 0% 50%;
