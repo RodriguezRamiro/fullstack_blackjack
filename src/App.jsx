@@ -18,10 +18,7 @@ import Navbar from './components/navbar';
 import UsernamePrompt from './components/usernameprompt';
 import Footer from './components/footer';
 
-import './app.css';
-import './styles/layout.css';
-import './styles/navbar.css';
-import './styles/footer.css';
+
 
 
 function Lobby({ playerId, username }) {
@@ -54,16 +51,17 @@ function Lobby({ playerId, username }) {
   };
 
   return (
-    <div className="lobby-background">
+    <div className="lobby-card">
       <h1>Blackjack</h1>
+
       <div className="table-controls">
         <button onClick={createTable}>Create Table</button>
         <button onClick={joinTable}>Join Table</button>
       </div>
-      <GlobalChat username={username} />
     </div>
   );
 }
+
 
 function useTableIdFromPath() {
   const location = useLocation();
@@ -76,6 +74,7 @@ function AppRoutes({ playerId, username }) {
 
   return (
     <>
+    <div className='lobby-background'>
       <Navbar
         tableId={tableId}
         playerId={playerId}
@@ -94,6 +93,8 @@ function AppRoutes({ playerId, username }) {
           />
         </Routes>
       </main>
+        <GlobalChat username={username} />
+      </div>
     </>
   );
 }

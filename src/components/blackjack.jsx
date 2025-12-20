@@ -9,11 +9,6 @@ import DealerHand from './dealerhand';
 import Controls from './controls';
 import TableSeats from './tableseats';
 
-import "../styles/lobby.css";
-import "../styles/table.css";
-import "../styles/cards.css";
-import "../styles/buttons.css";
-
 
 
 export default function BlackjackGame({ username, playerId }) {
@@ -39,6 +34,7 @@ export default function BlackjackGame({ username, playerId }) {
     console.log('received game_state:', state);
     console.log('full game_state:', JSON.stringify(state, null, 2));
     setGameState(state);
+    console.log("TURN:", state.turn, "ME:", playerIdStr);
 
     const player = state?.players?.[playerIdStr] || null;
     console.log("player entry in state:", player);
@@ -244,13 +240,22 @@ export default function BlackjackGame({ username, playerId }) {
   /** Main UI */
   return (
     <div className="game-wrapper">
-      {tableId ? (
+    {!joined ? (
+      <div className="lobby-background">
+        <div className="lobby-card">
+          <h1>Blackjack Table</h1>
+          <p>Waiting for players to join...</p>
+        </div>
+      </div>
+    ) : (
         <div className="table-seats-layout">
           <div className="blackjack-table">
             <div className="blackjack-content">
 
               {/* LEFT SIDE — Game Area */}
+
               <div className="blackjack-left">
+                {/* betting + dealer + controls */}
                 <div className="betting-controls">
                   <label htmlFor="betAmount">Table Bet ($): </label>
                   <input
@@ -277,7 +282,6 @@ export default function BlackjackGame({ username, playerId }) {
                 </div>
 
                 <DealerHand cards={dealerCards} reveal={dealerReveal} />
-
                 <Controls
                   onDeal={startGame}
                   onHit={hit}
@@ -287,7 +291,6 @@ export default function BlackjackGame({ username, playerId }) {
                   gameOver={gameOver}
                   canDeal={true}
                 />
-
                 {gameOver && (
                   <div className="game-over-message">
                     <strong>{renderResult()}</strong>
@@ -297,6 +300,7 @@ export default function BlackjackGame({ username, playerId }) {
 
               {/* RIGHT SIDE — Chat / Players */}
               <div className="blackjack-right">
+                {/* seats / chat */}
                 <TableSeats
                   players={
                     gameState?.players
@@ -314,9 +318,7 @@ export default function BlackjackGame({ username, playerId }) {
             </div>
           </div>
         </div>
-      ) : (
-        <p style={{ textAlign: 'center' }}>Waiting to join a table...</p>
-      )}
+    )}
     </div>
   );
-}
+  }

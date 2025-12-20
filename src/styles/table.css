@@ -140,7 +140,10 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: rotate(var(--seat-angle)) translate(170px) rotate(cal(-1 * var(--seat-angle)));
+    transform:
+      rotate(var(--seat-angle))
+      translate(170px)
+      rotate(calc(-1 * var(--seat-angle)));
     transform-origin: center center;
     transition: transform 0.3s ease;
   }
