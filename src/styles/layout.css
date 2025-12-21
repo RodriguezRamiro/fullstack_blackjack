@@ -11,11 +11,11 @@ body {
 
 
 .game-wrapper {
-  min-height: calc(100vh - 60px); /* accounts for navbar */
+  min-height: calc(100vh - var(--navbar-height));
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 1rem;
+  padding: 1.5rem 1rem;
   box-sizing: border-box;
 }
 
@@ -24,15 +24,16 @@ body {
 .blackjack-table {
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
+  display: flex;
+  justify-content: center;
 }
 
 .blackjack-content {
+  width: 100%;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   gap: 2rem;
-  padding: 1rem 1rem;
+  padding: 1rem;
   box-sizing: border-box;
 }
 
@@ -47,15 +48,16 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  overflow: hidden;
+
   background: var(--chat-bg);
   border: 1px solid var(--chat-border);
   border-radius: var(--border-radius-large);
   padding: 1rem;
+
   max-height: 600px;
   overflow-y: auto;
+
   box-shadow: var(--box-shadow-medium);
   position: relative;
 }

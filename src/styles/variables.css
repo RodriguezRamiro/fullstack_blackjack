@@ -3,6 +3,7 @@
 /* --- CSS Variables (Custom Properties) --- */
 /* Centralizing colors and common values for easier management */
 :root {
+
     /* Brand & Core Colors */
     --color-primary-green: #588958;
     --color-dark-background: #1c1c1c;
@@ -29,23 +30,29 @@
     /* Chat Specific Colors */
     --chat-bg: rgba(255, 255, 255, 0.1);
     --chat-border: #a67c52;
+
     --chat-message-default-bg: rgba(255, 255, 255, 0.1);
     --chat-message-self-bg: rgba(11, 143, 143, 0.9);
     --chat-message-self-text: #e0f7f7;
+
     --chat-message-global-bg: rgba(0, 123, 255, 0.2);
     --chat-message-global-text: #cce5ff;
+
     --chat-message-room-bg: rgba(255, 248, 220, 0.6);
     --chat-message-room-text: #3b2f22;
     --chat-message-room-border: #d2b48c;
+
     --chat-message-dealer-bg: var(--color-gray-medium);
     --chat-message-dealer-text: var(--color-gold-accent);
 
     /* Spacing & Sizing */
     --navbar-height: 60px;
+
     --border-radius-small: 4px;
     --border-radius-medium: 6px;
     --border-radius-large: 8px;
     --border-radius-pill: 20px;
+
     --box-shadow-light: 0 2px 4px rgba(0, 0, 0, 0.4);
     --box-shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.25);
     --box-shadow-heavy: 0 0 30px rgba(0, 0, 0, 0.5);
