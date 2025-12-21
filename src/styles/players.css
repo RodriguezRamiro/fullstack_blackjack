@@ -24,10 +24,10 @@
     gap: 10px;
     justify-content: center;
     background-color: rgba(0, 100, 0, 0.2);
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     border-radius: var(--border-radius-large);
-    margin-top: 6px;
+
     min-height: 80px;
-    margin-bottom: 25rem;
-    box-shadow: var(--box-shadow-light); /* Added missing semicolon */
+    margin-bottom: 0;
+    box-shadow: var(--box-shadow-light);
   }

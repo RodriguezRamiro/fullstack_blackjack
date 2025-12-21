@@ -7,8 +7,8 @@ import '../styles/footer.css';
 const Footer = () => {
     return (
         <footer className="footer" aria-label="Footer">
-          <h3 className="footer-logo">RodriguezTech Solutions</h3>
-          <p>&reg; {new Date().getFullYear()} RodriguezTech. All rights reserved.</p>
+          <h3 className="footer-logo">RodriguezTech Studios&trade;</h3>
+          <p>RodriguezTech. All rights reserved&reg; {new Date().getFullYear()} </p>
       <p>
         <small>
         All rights reserved - Version 1.0.0 —{' '}
