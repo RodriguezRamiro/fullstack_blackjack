@@ -30,6 +30,7 @@ body {
 
 .blackjack-content {
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: row;
   gap: 2rem;
@@ -41,6 +42,7 @@ body {
   flex: 2;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1.2rem;
 }
 
@@ -48,7 +50,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: center;
 
   background: var(--chat-bg);
   border: 1px solid var(--chat-border);
@@ -60,4 +62,10 @@ body {
 
   box-shadow: var(--box-shadow-medium);
   position: relative;
+}
+
+.betting-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }

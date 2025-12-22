@@ -25,19 +25,16 @@ export default function BlackjackGame({ username, playerId }) {
   const [gameOver, setGameOver] = useState(false);
   const [gameState, setGameState] = useState({});
   const [betAmount, setBetAmount] = useState(10);
+  const [betLocked, setBetLocked] = useState(false);
   const [joined, setJoined] = useState(false);
 
   const hasJoinedRef = useRef(false);
 
   /** Handles incoming game state from the server */
   const handleGameState = useCallback((state) => {
-    console.log('received game_state:', state);
-    console.log('full game_state:', JSON.stringify(state, null, 2));
     setGameState(state);
-    console.log("TURN:", state.turn, "ME:", playerIdStr);
 
     const player = state?.players?.[playerIdStr] || null;
-    console.log("player entry in state:", player);
     setPlayerCards(player?.hand || []);
 
     // Dealer hand
@@ -106,7 +103,6 @@ export default function BlackjackGame({ username, playerId }) {
     if (!tableId || !playerIdStr || !username || hasJoinedRef.current) return;
 
     const doJoin = () => {
-      console.log(">>> Attempting to join:", { tableId, playerId: playerIdStr, username });
       socket.emit(
         "join", {
         table_id: tableId,
@@ -125,7 +121,7 @@ export default function BlackjackGame({ username, playerId }) {
     };
 
     if (socket.connected) doJoin();
-    else socket.once("connect", doJoin);
+    else socket.on("connect", doJoin);
 
     return () => socket.off("connect", doJoin);
   }, [tableId, playerIdStr, username]);
@@ -137,10 +133,9 @@ export default function BlackjackGame({ username, playerId }) {
       const tableId = data?.table_id || data?.data?.table_id;
 
       if (!tableId) {
-        console.warn("⚠️ joined_room event received with no table_id", payload);
+        console.warn("⚠️ joined_room event received with no table_id", data);
         return;
       }
-      console.log("✅ Successfully joined room:", tableId);
       setJoined(true);
     };
     socket.on('joined_room', handleJoinedRoom);
@@ -149,12 +144,15 @@ export default function BlackjackGame({ username, playerId }) {
 
   /** Bet placed listener */
   useEffect(() => {
-    const handleBetPlaced = ({ playerId, bet }) => {
-      console.log(`Player ${playerId} placed a bet of $${bet}`);
+    const handleBetPlaced = ({ playerId }) => {
+      if (playerId === playerIdStr) {
+        setBetLocked(false);
+      }
     };
+
     socket.on('bet_placed', handleBetPlaced);
     return () => socket.off('bet_placed', handleBetPlaced);
-  }, []);
+  }, [playerIdStr]);
 
   /** Game control functions */
   const startGame = async () => {
@@ -166,21 +164,18 @@ export default function BlackjackGame({ username, playerId }) {
       const res = await fetch(`${BACKEND_URL}/start-game`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tableId, playerId: playerIdStr }),
+        body: JSON.stringify({ table_id: tableId, playerId: playerIdStr }),
       });
 
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
       const data = await res.json();
-      console.log("Response data:", data);
-      console.log('Game started at table:', data.table_id);
     } catch (err) {
       console.error('Error starting game:', err);
     }
   };
 
   const hit = () => {
-    console.log('Hit Clicked')
     socket.emit('hit', { table_id: tableId, playerId: playerIdStr });
   };
 
@@ -190,17 +185,18 @@ export default function BlackjackGame({ username, playerId }) {
 
   const leaveTable = () => {
     if (window.confirm('Are you sure you want to leave the table?')) {
-      socket.emit("leave", { tableId, playerId: playerIdStr });
+      socket.emit("leave", { table_id: tableId, playerId: playerIdStr });
       navigate("/");
     }
   };
 
   const placeBet = () => {
+    setBetLocked(true)
     if (!tableId || !playerIdStr || betAmount < 1) {
       console.error("Invalid bet or missing table/player ID");
       return;
     }
-    socket.emit("place_bet", { tableId, playerId: playerIdStr, bet: betAmount });
+    socket.emit("place_bet", { table_id: tableId, playerId: playerIdStr, bet: betAmount });
   };
 
   const sendMessage = (msg) => {
@@ -221,8 +217,8 @@ export default function BlackjackGame({ username, playerId }) {
   }, [allowBetting]);
 
   const renderResult = () => {
-    if (!gameOver) return null;
-    const player = gameState.players?.[playerIdStr];
+    if (!gameState?.players) return null;
+    const player = gameState.players[playerIdStr];
     if (!player?.result) return "Game over. Check results!";
     switch (player.result) {
       case "win": return "You won! 🎉";
@@ -234,7 +230,7 @@ export default function BlackjackGame({ username, playerId }) {
 
   /** Loading state */
   if (loading) {
-    return <div className="loading-message">Loading game data...</div>;
+    return <div className="loading-message">Loading table {tableId}</div>;
   }
 
   /** Main UI */
@@ -248,7 +244,6 @@ export default function BlackjackGame({ username, playerId }) {
         </div>
       </div>
     ) : (
-        <div className="table-seats-layout">
           <div className="blackjack-table">
             <div className="blackjack-content">
 
@@ -264,14 +259,19 @@ export default function BlackjackGame({ username, playerId }) {
                     min="1"
                     value={betAmount}
                     onChange={(e) => setBetAmount(Number(e.target.value))}
-                    style={{ width: "80px", marginRight: "120px" }}
                     disabled={playerTurn || gameOver || !allowBetting}
                   />
+
                   <button
                     type="button"
                     onClick={placeBet}
-                    disabled={betAmount < 1 || playerTurn || gameOver || !allowBetting}
-                  >
+                    disabled={
+                      betLocked ||
+                      betAmount < 1 ||
+                      playerTurn ||
+                      gameOver ||
+                      !allowBetting
+                    }>
                     Raise Bet
                   </button>
                   {!allowBetting && (
@@ -286,10 +286,10 @@ export default function BlackjackGame({ username, playerId }) {
                   onDeal={startGame}
                   onHit={hit}
                   onStay={stay}
-                  onReset={() => window.location.reload()}
-                  disabled={!playerTurn || !joined}
+                  onReset={() => navigate(`/table/${tableId}`)}
+                  disabled={!playerTurn || gameOver}
                   gameOver={gameOver}
-                  canDeal={true}
+                  canDeal={!gameOver && joined}
                 />
                 {gameOver && (
                   <div className="game-over-message">
@@ -317,7 +317,6 @@ export default function BlackjackGame({ username, playerId }) {
               </div>
             </div>
           </div>
-        </div>
     )}
     </div>
   );
